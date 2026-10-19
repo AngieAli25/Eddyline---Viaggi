@@ -1,0 +1,121 @@
+---
+/**
+ * Hero della homepage-vetrina: parla del brand, non di un viaggio.
+ * Più basso dell'hero di una scheda viaggio, così le due card entrano
+ * subito in vista senza scorrere: la scelta è l'unica azione della pagina.
+ */
+import { vetrina } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+---
+
+<section class="hv" aria-labelledby="hv-title">
+  <div class="hv__bg" aria-hidden="true">
+    <picture>
+      <source type="image/webp" media="(max-width: 720px)" srcset="/images/hero-camp-960.webp" />
+      <source type="image/webp" srcset="/images/hero-camp.webp" />
+      <source media="(max-width: 720px)" srcset="/images/hero-camp-960.jpg" />
+      <img
+        src="/images/hero-camp.jpg"
+        alt=""
+        class="hv__img"
+        fetchpriority="high"
+        decoding="async"
+        width="1600"
+        height="1067"
+      />
+    </picture>
+    <div class="hv__veil"></div>
+    <svg class="hv__current" viewBox="0 0 600 200" aria-hidden="true" preserveAspectRatio="none">
+      <path
+        d="M-20,150 C120,60 260,180 400,90 C500,30 560,70 620,40"
+        fill="none"
+        stroke="var(--sesia-bright)"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        opacity="0.5"></path>
+    </svg>
+  </div>
+
+  <div class="container hv__inner hero-stagger">
+    <p class="eyebrow hv__eyebrow" style="--i:0">{vetrina.eyebrow}</p>
+    <h1 class="hv__title" id="hv-title" style="--i:1">{vetrina.h1}</h1>
+    <div style="--i:2">
+      <CurrentLine variant="underline" class="hv__underline" />
+    </div>
+    <p class="hv__sub" style="--i:3">{vetrina.sub}</p>
+  </div>
+</section>
+
+<style>
+  .hv {
+    position: relative;
+    isolation: isolate;
+    /* Volutamente basso: le due card devono affacciarsi senza scorrere */
+    min-height: clamp(19rem, 42vh, 24rem);
+    display: flex;
+    align-items: center;
+    padding-block: clamp(2rem, 5vh, 3rem);
+    overflow: hidden;
+    background: var(--granite);
+    color: var(--text-on-dark);
+    text-align: center;
+  }
+
+  .hv__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .hv__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+  }
+  .hv__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(27, 36, 38, 0.72) 0%,
+        rgba(27, 36, 38, 0.62) 45%,
+        rgba(27, 36, 38, 0.9) 100%
+      ),
+      radial-gradient(110% 80% at 50% 0%, rgba(14, 90, 82, 0.42) 0%, transparent 62%);
+  }
+  .hv__current {
+    position: absolute;
+    top: 12%;
+    right: -6%;
+    width: min(58%, 26rem);
+    height: auto;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .hv__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 46rem;
+  }
+  .hv__eyebrow {
+    color: var(--sesia-bright);
+  }
+  .hv__title {
+    color: var(--foam);
+    font-size: var(--step-5);
+    margin-top: 0.6rem;
+  }
+  .hv__underline {
+    color: var(--sesia-bright);
+    margin-inline: auto;
+  }
+  .hv__sub {
+    margin: 1.25rem auto 0;
+    max-width: 52ch;
+    font-size: var(--step-1);
+    color: color-mix(in srgb, var(--foam) 88%, transparent);
+    line-height: 1.55;
+  }
+</style>

@@ -1,0 +1,654 @@
+---
+/**
+ * Blocco iscrizione — il cuore della conversione.
+ * Form con validazione client-side + honeypot + time-trap; submit JSON a
+ * /api/lead (che inoltra al webhook server-side). Accanto: i contatti diretti,
+ * per chi preferisce parlare con una persona.
+ */
+import { contacts, elencoPartenze, etichettaDurata } from '../data/content';
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+---
+
+<section class="isc section" id="iscrizione" aria-labelledby="isc-title">
+  <div class="container">
+    <div class="isc__head reveal">
+      <p class="eyebrow isc__eyebrow">ISCRIZIONE</p>
+      <h2 class="isc__title" id="isc-title">Blocca il tuo posto</h2>
+      <CurrentLine variant="underline" animate={true} class="isc__underline" />
+      <p class="isc__intro">
+        Il camp è a numero chiuso. Lasciaci i tuoi dati: ti ricontattiamo per verificare
+        la disponibilità, rispondere alle tue domande e completare l’iscrizione con la
+        caparra di {viaggio.caparraLabel}.
+      </p>
+    </div>
+
+    <div class="isc__grid">
+      <!-- FORM -->
+      <div class="isc__card reveal">
+        <form class="lead" data-lead-form data-viaggio={viaggio.slug} novalidate>
+          <!-- Quale viaggio: identifica il lead nel foglio -->
+          <input type="hidden" name="viaggio" value={viaggio.slug} />
+          <input type="hidden" name="viaggioNome" value={viaggio.nome} />
+          <!-- Honeypot: nascosto agli umani, riempito dai bot -->
+          <div class="lead__hp" aria-hidden="true">
+            <label>
+              Non compilare questo campo
+              <input type="text" name="website" tabindex="-1" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="lead__field">
+            <label for="f-nome">Nome e cognome <span aria-hidden="true">*</span></label>
+            <input id="f-nome" name="nome" type="text" autocomplete="name" required />
+            <p class="lead__err" data-err-for="nome" hidden></p>
+          </div>
+
+          <div class="lead__row2">
+            <div class="lead__field">
+              <label for="f-email">Email <span aria-hidden="true">*</span></label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required />
+              <p class="lead__err" data-err-for="email" hidden></p>
+            </div>
+            <div class="lead__field">
+              <label for="f-tel">Telefono <span aria-hidden="true">*</span></label>
+              <input id="f-tel" name="telefono" type="tel" autocomplete="tel" required />
+              <p class="lead__err" data-err-for="telefono" hidden></p>
+            </div>
+          </div>
+
+          {
+            viaggio.partenze.length > 1 && (
+              <div class="lead__field">
+                <label for="f-partenza">
+                  Quale partenza ti interessa? <span aria-hidden="true">*</span>
+                </label>
+                <select id="f-partenza" name="partenza" required>
+                  <option value="">Scegli una data</option>
+                  {viaggio.partenze.map((pt) => (
+                    <option value={pt.id}>{pt.periodo}</option>
+                  ))}
+                  <option value="indifferente">Sono flessibile / indifferente</option>
+                </select>
+                <p class="lead__err" data-err-for="partenza" hidden />
+              </div>
+            )
+          }
+          {
+            viaggio.partenze.length === 1 && (
+              <input type="hidden" name="partenza" value={viaggio.partenze[0].id} />
+            )
+          }
+
+          <div class="lead__field">
+            <label for="f-esp">Hai già fatto attività outdoor?</label>
+            <select id="f-esp" name="esperienza">
+              <option value="">Preferisco non specificare</option>
+              <option value="prima-volta">È la mia prima volta</option>
+              <option value="qualche-esperienza">Qualche esperienza</option>
+              <option value="esperto">Pratico regolarmente</option>
+            </select>
+          </div>
+
+          <div class="lead__field">
+            <label for="f-msg">Vuoi dirci qualcosa?</label>
+            <textarea id="f-msg" name="messaggio" rows="3"></textarea>
+          </div>
+
+          <div class="lead__consent">
+            <input id="f-privacy" name="privacy" type="checkbox" required />
+            <label for="f-privacy">
+              Ho letto la{' '}
+              <a href={contacts.privacyUrl} target="_blank" rel="noopener">
+                Privacy Policy
+              </a>{' '}
+              e acconsento al trattamento dei miei dati. <span aria-hidden="true">*</span>
+            </label>
+          </div>
+          <p class="lead__err" data-err-for="privacy" hidden></p>
+
+          <button type="submit" class="btn btn-primary lead__submit">
+            Invia la richiesta
+          </button>
+
+          <p class="lead__note">
+            Nessun impegno: ti ricontattiamo per parlarne. Non usiamo i tuoi dati per altro.
+          </p>
+
+          <!-- Stati -->
+          <div class="lead__ok" data-lead-ok hidden role="status">
+            <p class="lead__ok-h">Richiesta inviata.</p>
+            <p>
+              Ti ricontattiamo al più presto. Se hai fretta, scrivici direttamente su
+              WhatsApp.
+            </p>
+          </div>
+          <p class="lead__fail" data-lead-fail hidden role="alert"></p>
+        </form>
+      </div>
+
+      <!-- CONTATTI DIRETTI -->
+      <aside class="isc__side reveal">
+        <div class="isc__recap">
+          <p class="isc__recap-label tag-mono">IL CAMP</p>
+          <p class="isc__recap-nome">{viaggio.nome}</p>
+          <ul class="isc__recap-list">
+            <li>
+              <span>{viaggio.partenze.length > 1 ? 'Partenze' : 'Quando'}</span>
+              <strong>{elencoPartenze(viaggio) || 'Da annunciare'}</strong>
+            </li>
+            <li><span>Dove</span><strong>{viaggio.destinazione}</strong></li>
+            <li><span>Durata</span><strong>{etichettaDurata(viaggio)}</strong></li>
+            <li><span>Quota</span><strong>{viaggio.prezzoLabel}</strong></li>
+            <li><span>Età minima</span><strong>{viaggio.etaMinima} anni</strong></li>
+          </ul>
+        </div>
+
+        <div class="isc__direct">
+          <p class="isc__direct-h">Preferisci parlarne?</p>
+          <a
+            class="isc__contact"
+            href={contacts.whatsapp}
+            target="_blank"
+            rel="noopener"
+            data-track="whatsapp_click"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12.04 2c-5.46 0-9.9 4.43-9.9 9.9 0 1.74.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.43 9.9-9.9 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.05 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.06-1.13.08-1.83-.11a16.7 16.7 0 0 1-1.66-.61c-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.2-1.6-1.2-3.04 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.78-.37l.56.01c.18.01.42-.07.66.5.24.59.83 2.04.9 2.19.07.15.12.32.02.51-.1.2-.15.32-.3.49-.14.18-.3.4-.43.53-.14.15-.29.3-.12.6.17.29.74 1.22 1.59 1.98 1.1.98 2.02 1.28 2.31 1.43.29.15.46.12.63-.07.17-.2.73-.85.92-1.14.2-.29.39-.24.66-.15.27.1 1.71.81 2 .96.29.15.49.22.56.34.07.12.07.69-.17 1.36Z"
+              ></path>
+            </svg>
+            <span>
+              <strong>WhatsApp</strong>
+              <em>Risposta in giornata</em>
+            </span>
+          </a>
+
+          <a class="isc__contact" href={contacts.phoneHref} data-track="call_click">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1.1l-2.1 2.2Z"
+              ></path>
+            </svg>
+            <span>
+              <strong>{contacts.phoneDisplay}</strong>
+              <em>Chiamaci</em>
+            </span>
+          </a>
+
+          <a class="isc__contact" href={`mailto:${contacts.email}`}>
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+                d="M3.5 6.5h17v11h-17zM3.5 7l8.5 6 8.5-6"></path>
+            </svg>
+            <span>
+              <strong>{contacts.email}</strong>
+              <em>Scrivici una mail</em>
+            </span>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<script>
+  /**
+   * Submit del form: validazione, honeypot/time-trap, POST a /api/lead,
+   * stati inline e push dell'evento form_submit nel dataLayer.
+   */
+  (function () {
+    const form = document.querySelector<HTMLFormElement>('[data-lead-form]');
+    if (!form) return;
+
+    // time-trap: quando il form è stato reso
+    const openedAt = Date.now();
+
+    const okBox = form.querySelector<HTMLElement>('[data-lead-ok]');
+    const failBox = form.querySelector<HTMLElement>('[data-lead-fail]');
+    const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+    const showErr = (field: string, msg: string) => {
+      const el = form.querySelector<HTMLElement>(`[data-err-for="${field}"]`);
+      if (!el) return;
+      el.textContent = msg;
+      el.hidden = false;
+      const input = form.querySelector<HTMLElement>(`[name="${field}"]`);
+      input?.setAttribute('aria-invalid', 'true');
+    };
+
+    const clearErrs = () => {
+      form.querySelectorAll<HTMLElement>('.lead__err').forEach((el) => {
+        el.hidden = true;
+        el.textContent = '';
+      });
+      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      if (failBox) failBox.hidden = true;
+    };
+
+    const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrs();
+
+      const fd = new FormData(form);
+      const nome = String(fd.get('nome') ?? '').trim();
+      const email = String(fd.get('email') ?? '').trim();
+      const telefono = String(fd.get('telefono') ?? '').trim();
+      const privacy = fd.get('privacy') === 'on';
+
+      // Validazione client-side (la stessa vale anche server-side)
+      let bad = false;
+      if (nome.length < 2) {
+        showErr('nome', 'Inserisci il tuo nome.');
+        bad = true;
+      }
+      if (!isEmail(email)) {
+        showErr('email', 'Inserisci un’email valida.');
+        bad = true;
+      }
+      if (telefono.length < 6) {
+        showErr('telefono', 'Inserisci un recapito telefonico.');
+        bad = true;
+      }
+      if (!privacy) {
+        showErr('privacy', 'Serve l’accettazione della privacy.');
+        bad = true;
+      }
+      // Il selettore esiste solo con più partenze: se c'è, va scelto.
+      const selPartenza = form.querySelector<HTMLSelectElement>('select[name="partenza"]');
+      if (selPartenza && !selPartenza.value) {
+        showErr('partenza', 'Scegli quale partenza ti interessa.');
+        bad = true;
+      }
+      if (bad) {
+        form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+        return;
+      }
+
+      // Attribuzione salvata dal layout
+      let attr: Record<string, string> = {};
+      try {
+        attr = JSON.parse(sessionStorage.getItem('eddyline_source') || '{}');
+      } catch {}
+
+      const payload = {
+        nome,
+        email,
+        telefono,
+        viaggio: String(fd.get('viaggio') ?? ''),
+        viaggioNome: String(fd.get('viaggioNome') ?? ''),
+        partenza: String(fd.get('partenza') ?? ''),
+        esperienza: String(fd.get('esperienza') ?? ''),
+        messaggio: String(fd.get('messaggio') ?? ''),
+        privacy,
+        website: String(fd.get('website') ?? ''),
+        _t: openedAt,
+        ...attr,
+      };
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Invio…';
+      }
+
+      try {
+        const res = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}) as any);
+
+        if (res.ok && data.ok) {
+          // Evento PRIMA del redirect: dopo la navigazione non partirebbe.
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: 'form_submit',
+            form: 'iscrizione_camp',
+            viaggio: form.dataset.viaggio,
+          });
+          // Meta: fbq esiste solo a consenso marketing dato.
+          (window as any).fbq?.('track', 'Lead', {
+            content_name: form.dataset.viaggio,
+            content_category: 'iscrizione_camp',
+          });
+
+          // Conferma inline già visibile: se il redirect tardasse o fallisse,
+          // la persona vede comunque che l'invio è andato a buon fine.
+          form
+            .querySelectorAll('.lead__field, .lead__row2, .lead__consent, .lead__submit, .lead__note')
+            .forEach((el) => ((el as HTMLElement).hidden = true));
+          if (okBox) okBox.hidden = false;
+
+          // Pagina di ringraziamento: path DISTINTO da /grazie della landing
+          // attività, il cui trigger GTM intercetta ^/grazie$ e conterebbe
+          // queste iscrizioni come sue conversioni.
+          const slug = form.dataset.viaggio || '';
+          location.assign('/grazie-viaggio' + (slug ? '?v=' + encodeURIComponent(slug) : ''));
+          return;
+        }
+
+        // Errori di validazione dal server
+        if (data.errors) {
+          Object.entries(data.errors).forEach(([k, v]) => showErr(k, String(v)));
+        } else if (failBox) {
+          failBox.textContent = data.error || 'Invio non riuscito. Riprova tra poco.';
+          failBox.hidden = false;
+        }
+      } catch {
+        if (failBox) {
+          failBox.textContent = 'Problema di rete. Riprova tra poco.';
+          failBox.hidden = false;
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Invia la richiesta';
+        }
+      }
+    });
+  })();
+</script>
+
+<style>
+  .isc {
+    background: var(--granite);
+    color: var(--text-on-dark);
+  }
+  .isc__head {
+    text-align: center;
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+  .isc__eyebrow {
+    color: var(--sesia-bright);
+  }
+  .isc__title {
+    color: var(--foam);
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+  }
+  .isc__underline {
+    margin-inline: auto;
+    color: var(--sesia-bright);
+  }
+  .isc__intro {
+    margin-top: 1.15rem;
+    color: color-mix(in srgb, var(--foam) 78%, transparent);
+    line-height: 1.6;
+  }
+
+  .isc__grid {
+    margin-top: clamp(2rem, 5vw, 3rem);
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .isc__grid {
+      grid-template-columns: 1.25fr 1fr;
+    }
+  }
+
+  .isc__card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.35rem, 3.5vw, 2.15rem);
+    box-shadow: var(--shadow-lg);
+    color: var(--text);
+  }
+
+  /* --- Form --- */
+  .lead__hp {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .lead__field {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .lead__field + .lead__field,
+  .lead__row2 + .lead__field,
+  .lead__field + .lead__row2 {
+    margin-top: 0.9rem;
+  }
+  .lead__row2 {
+    display: grid;
+    gap: 0.9rem;
+  }
+  @media (min-width: 520px) {
+    .lead__row2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .lead label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--step--1);
+    color: var(--text);
+  }
+  .lead label span {
+    color: var(--rescue);
+  }
+
+  .lead input[type='text'],
+  .lead input[type='email'],
+  .lead input[type='tel'],
+  .lead select,
+  .lead textarea {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.85rem;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .lead textarea {
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+  .lead input:focus,
+  .lead select:focus,
+  .lead textarea:focus {
+    border-color: var(--sesia-bright);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--sesia-bright-15);
+  }
+  .lead [aria-invalid='true'] {
+    border-color: var(--rescue);
+  }
+
+  .lead__err {
+    font-size: var(--step--1);
+    color: var(--rescue-dark);
+    font-weight: 500;
+  }
+
+  .lead__consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+  }
+  .lead__consent input {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.15rem;
+    accent-color: var(--sesia-deep);
+  }
+  .lead__consent label {
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-mute);
+  }
+  .lead__consent a {
+    color: var(--sesia-deep);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .lead__submit {
+    width: 100%;
+    margin-top: 1.35rem;
+  }
+  .lead__submit:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .lead__note {
+    margin-top: 0.75rem;
+    text-align: center;
+    font-size: var(--step--1);
+    color: var(--text-mute);
+  }
+
+  .lead__ok {
+    text-align: center;
+    padding: 1rem 0;
+  }
+  .lead__ok-h {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--step-2);
+    color: var(--sesia-deep);
+  }
+  .lead__ok p + p {
+    margin-top: 0.5rem;
+    color: var(--text-mute);
+  }
+  .lead__fail {
+    margin-top: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius-sm);
+    background: var(--rescue-12);
+    color: var(--rescue-dark);
+    font-weight: 500;
+    font-size: var(--step--1);
+  }
+
+  /* --- Colonna laterale --- */
+  .isc__side {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .isc__recap {
+    background: rgba(242, 246, 244, 0.06);
+    border: 1px solid rgba(242, 246, 244, 0.14);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 3vw, 1.6rem);
+  }
+  .isc__recap-label {
+    color: var(--sesia-bright);
+    letter-spacing: 0.16em;
+  }
+  .isc__recap-nome {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--step-2);
+    color: var(--foam);
+    margin-top: 0.35rem;
+    line-height: 1.15;
+  }
+  .isc__recap-list {
+    list-style: none;
+    margin: 1.1rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .isc__recap-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(242, 246, 244, 0.1);
+  }
+  .isc__recap-list li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .isc__recap-list span {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 58%, transparent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .isc__recap-list strong {
+    font-weight: 600;
+    color: var(--foam);
+    text-align: right;
+  }
+
+  .isc__direct {
+    background: rgba(242, 246, 244, 0.06);
+    border: 1px solid rgba(242, 246, 244, 0.14);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 3vw, 1.6rem);
+  }
+  .isc__direct-h {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-1);
+    color: var(--foam);
+    margin-bottom: 0.85rem;
+  }
+  .isc__contact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0;
+    color: var(--foam);
+    text-decoration: none;
+    border-top: 1px solid rgba(242, 246, 244, 0.1);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .isc__contact:hover {
+    color: var(--sesia-bright);
+  }
+  .isc__contact svg {
+    flex: 0 0 auto;
+    color: var(--sesia-bright);
+  }
+  .isc__contact span {
+    display: grid;
+  }
+  .isc__contact strong {
+    font-weight: 600;
+    font-size: var(--step-0);
+  }
+  .isc__contact em {
+    font-style: normal;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 55%, transparent);
+  }
+</style>

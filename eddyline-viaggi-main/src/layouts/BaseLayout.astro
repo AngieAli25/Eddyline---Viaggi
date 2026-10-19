@@ -1,0 +1,266 @@
+---
+import '../styles/global.css';
+import config from '../config';
+import MetaPixel from '../components/MetaPixel.astro';
+
+/**
+ * Shell del layout — allineata alla landing eddyline.it/prenota.
+ * - lang="it", noindex/nofollow (landing paid)
+ * - Consent Mode v2 default DENIED + GTM consent-aware
+ * - Font Google con preconnect + preload
+ * - Attribuzione last-touch (UTM + click id) in sessionStorage
+ */
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const { gtmContainerId } = config.integrations;
+const { siteUrl } = config.site;
+---
+
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Landing paid: niente indicizzazione -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:image" content={`${siteUrl}/images/hero-camp.jpg`} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={siteUrl} />
+
+    <!-- Font Google: preconnect + preload del display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=Spline+Sans+Mono:wght@500&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=Spline+Sans+Mono:wght@500&display=swap"
+    />
+
+    <!-- Consent Mode v2: default DENIED prima di tutto -->
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500,
+      });
+      gtag('set', 'url_passthrough', true);
+      gtag('set', 'ads_data_redaction', true);
+
+      /* Ripristino consenso da scelta precedente — inline e PRIMA di GTM,
+         altrimenti sulle pagine successive GA4 si inizializza in "denied"
+         e sopprime gli eventi di conversione. */
+      try {
+        var _cc = JSON.parse(localStorage.getItem('eddyline_consent') || 'null');
+        if (_cc && typeof _cc.analytics === 'boolean') {
+          gtag('consent', 'update', {
+            analytics_storage: _cc.analytics ? 'granted' : 'denied',
+            ad_storage: _cc.marketing ? 'granted' : 'denied',
+            ad_user_data: _cc.marketing ? 'granted' : 'denied',
+            ad_personalization: _cc.marketing ? 'granted' : 'denied',
+          });
+        }
+      } catch (e) {}
+    </script>
+
+    <!-- Attribuzione last-touch: conserva la fonte per la sessione, così
+         sopravvive alla navigazione e può essere allegata al lead. -->
+    <script is:inline>
+      (function () {
+        var KEY = 'eddyline_source';
+        try {
+          var p = new URLSearchParams(location.search);
+          var keys = [
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_content',
+            'utm_term',
+            'gclid',
+            'fbclid',
+            'msclkid',
+            'ttclid',
+          ];
+          var found = {};
+          var hasNew = false;
+          keys.forEach(function (k) {
+            var v = p.get(k);
+            if (v) {
+              found[k] = v;
+              hasNew = true;
+            }
+          });
+
+          if (hasNew) {
+            if (!found.utm_source) {
+              if (found.gclid) found.utm_source = 'google';
+              else if (found.fbclid) found.utm_source = 'meta';
+              else if (found.msclkid) found.utm_source = 'bing';
+            }
+            if (!found.utm_medium && (found.gclid || found.fbclid || found.msclkid)) {
+              found.utm_medium = 'cpc';
+            }
+            found.landing_page = location.pathname;
+            found.referrer = document.referrer || '';
+            found.first_seen = new Date().toISOString();
+            sessionStorage.setItem(KEY, JSON.stringify(found));
+          } else if (!sessionStorage.getItem(KEY)) {
+            var ref = document.referrer || '';
+            var host = '';
+            try {
+              host = ref ? new URL(ref).hostname : '';
+            } catch (e) {}
+            sessionStorage.setItem(
+              KEY,
+              JSON.stringify({
+                utm_source: host || 'direct',
+                utm_medium: host ? 'referral' : 'none',
+                landing_page: location.pathname,
+                referrer: ref,
+                first_seen: new Date().toISOString(),
+              })
+            );
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- GTM consent-aware (caricato dopo i default consent) -->
+    <script is:inline define:vars={{ gtmContainerId }}>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        if (f && f.parentNode) f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', gtmContainerId);
+    </script>
+
+    <!-- Meta Pixel: si include da sé solo a consenso marketing dato -->
+    <MetaPixel />
+  </head>
+
+  <body>
+    <noscript>
+      <iframe
+        src={`https://www.googletagmanager.com/ns.html?id=${gtmContainerId}`}
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"
+        title="gtm"></iframe>
+    </noscript>
+
+    <a class="skip-link" href="#main">Salta al contenuto</a>
+
+    <slot name="header" />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <slot name="footer" />
+    <slot name="sticky" />
+    <slot name="cookie" />
+
+    <!-- Orchestrazione motion leggera: reveal + disegno linea allo scroll -->
+    <script is:inline>
+      (function () {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !('IntersectionObserver' in window)) {
+          document.querySelectorAll('.reveal').forEach(function (el) {
+            el.classList.add('is-visible');
+          });
+          document.querySelectorAll('.draw-on-scroll').forEach(function (el) {
+            el.classList.add('is-drawn');
+          });
+          return;
+        }
+
+        document.querySelectorAll('.draw-on-scroll path').forEach(function (p) {
+          try {
+            var len = Math.ceil(p.getTotalLength());
+            p.parentElement.style.setProperty('--len', len);
+          } catch (e) {}
+        });
+
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible', 'is-drawn');
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.18, rootMargin: '0px 0px -8% 0px' }
+        );
+
+        document.querySelectorAll('.reveal, .draw-on-scroll').forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+    </script>
+
+    <!-- Eventi contatto: whatsapp_click / call_click -->
+    <script is:inline>
+      (function () {
+        document.addEventListener(
+          'click',
+          function (e) {
+            var el = e.target && e.target.closest ? e.target.closest('[data-track]') : null;
+            if (!el) return;
+            var ev = el.getAttribute('data-track');
+            if (ev !== 'whatsapp_click' && ev !== 'call_click') return;
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: ev });
+            // Meta: fbq esiste solo a consenso marketing dato.
+            if (window.fbq) window.fbq('track', 'Contact', { content_name: ev });
+          },
+          true
+        );
+      })();
+    </script>
+
+    <!-- Header: stato scrolled per la hairline -->
+    <script is:inline>
+      (function () {
+        var h = document.querySelector('[data-header]');
+        if (!h) return;
+        var onScroll = function () {
+          h.setAttribute('data-scrolled', window.scrollY > 8 ? 'true' : 'false');
+        };
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+      })();
+    </script>
+  </body>
+</html>

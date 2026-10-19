@@ -1,0 +1,260 @@
+---
+/**
+ * Pagina di conferma post-iscrizione.
+ *
+ * Serve a due cose: dire alla persona cosa succede adesso (l'attesa senza
+ * informazioni è il momento in cui un lead si raffredda) e dare un URL
+ * dedicato da usare come conversione in Google Ads.
+ *
+ * PATH: /grazie-viaggio, NON /grazie. Le due landing condividono il container
+ * GTM e il trigger della landing attività intercetta `^/grazie$`: con lo
+ * stesso path le iscrizioni ai camp verrebbero contate come sue conversioni.
+ *
+ * Il viaggio arriva come query param (?v=<slug>) e viene risolto lato client:
+ * la pagina è statica, quindi il riepilogo non può essere reso a build time.
+ * Senza parametro la pagina resta valida — chi ci arriva per caso vede
+ * comunque un messaggio sensato e i contatti.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeaderVetrina from '../components/HeaderVetrina.astro';
+import Footer from '../components/Footer.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+import CurrentLine from '../components/CurrentLine.astro';
+import { grazie, contacts, viaggi, elencoPartenze } from '../data/content';
+
+const title = 'Richiesta ricevuta — Eddyline Viaggi';
+const description = 'Abbiamo ricevuto la tua richiesta di iscrizione. Ti ricontattiamo entro 24 ore.';
+
+// Mappa slug → nome/periodo, per il riepilogo risolto lato client.
+const mappaViaggi = Object.fromEntries(
+  viaggi.map((v) => [
+    v.slug,
+    {
+      nome: v.nome,
+      periodo: elencoPartenze(v),
+      // Quota solo se definita: "Quota in definizione" in una conferma
+      // d'iscrizione suona come un'informazione mancante, non come un dato.
+      quota: v.prezzo > 0 ? v.prezzoLabel : '',
+    },
+  ])
+);
+---
+
+<BaseLayout title={title} description={description}>
+  <HeaderVetrina slot="header" />
+  <Footer slot="footer" />
+  <CookieBanner slot="cookie" />
+
+  <section class="gz" aria-labelledby="gz-title">
+    <div class="container container-narrow gz__inner">
+      <span class="gz__check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="34" height="34">
+          <path
+            d="M5 12.5l4.5 4.5L19 7.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </span>
+
+      <p class="eyebrow gz__eyebrow">{grazie.eyebrow}</p>
+      <h1 class="gz__title" id="gz-title">{grazie.h1}</h1>
+      <CurrentLine variant="underline" class="gz__underline" />
+      <p class="gz__sub">{grazie.sub}</p>
+
+      <!-- Riepilogo del viaggio: popolato da JS se ?v= è presente -->
+      <p class="gz__viaggio" data-gz-viaggio hidden></p>
+
+      <ol class="gz__passi">
+        {
+          grazie.passi.map((p, i) => (
+            <li class="gz__passo">
+              <span class="gz__num tag-mono" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div>
+                <h2 class="gz__passo-h">{p.titolo}</h2>
+                <p class="gz__passo-t">{p.testo}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="gz__fretta">
+        <p class="gz__fretta-h">{grazie.fretta}</p>
+        <div class="gz__ctas">
+          <a
+            class="btn btn-primary"
+            href={contacts.whatsapp}
+            target="_blank"
+            rel="noopener"
+            data-track="whatsapp_click"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12.04 2c-5.46 0-9.9 4.43-9.9 9.9 0 1.74.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.43 9.9-9.9 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.05 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.06-1.13.08-1.83-.11a16.7 16.7 0 0 1-1.66-.61c-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.2-1.6-1.2-3.04 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.78-.37l.56.01c.18.01.42-.07.66.5.24.59.83 2.04.9 2.19.07.15.12.32.02.51-.1.2-.15.32-.3.49-.14.18-.3.4-.43.53-.14.15-.29.3-.12.6.17.29.74 1.22 1.59 1.98 1.1.98 2.02 1.28 2.31 1.43.29.15.46.12.63-.07.17-.2.73-.85.92-1.14.2-.29.39-.24.66-.15.27.1 1.71.81 2 .96.29.15.49.22.56.34.07.12.07.69-.17 1.36Z"
+              ></path>
+            </svg>
+            Scrivici su WhatsApp
+          </a>
+          <a class="btn btn-secondary" href={contacts.phoneHref} data-track="call_click">
+            {contacts.phoneDisplay}
+          </a>
+        </div>
+      </div>
+
+      <p class="gz__back">
+        <a href="/">← Torna ai viaggi</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline define:vars={{ mappaViaggi }}>
+  /**
+   * Riepilogo del viaggio dal query param, e push dell'evento di conversione.
+   * La pagina è statica: il param si legge solo qui.
+   */
+  (function () {
+    try {
+      var slug = new URLSearchParams(location.search).get('v') || '';
+      var v = mappaViaggi[slug];
+      if (v) {
+        var el = document.querySelector('[data-gz-viaggio]');
+        if (el) {
+          el.textContent = [v.nome, v.periodo, v.quota].filter(Boolean).join(' · ');
+          el.hidden = false;
+        }
+      }
+      // Conversione: pagina di ringraziamento raggiunta.
+      // Nome allineato alla landing attività, così in GTM il trigger è lo stesso.
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'lead_thank_you', viaggio: slug });
+    } catch (e) {}
+  })();
+</script>
+
+<style>
+  .gz {
+    padding-block: clamp(3rem, 10vh, 6rem);
+    background: var(--bg);
+    min-height: 60vh;
+  }
+  .gz__inner {
+    text-align: center;
+  }
+
+  .gz__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--sesia-bright-15);
+    color: var(--sesia-deep);
+    margin-bottom: 1.5rem;
+  }
+
+  .gz__title {
+    font-size: var(--step-4);
+    margin-top: 0.5rem;
+  }
+  .gz__underline {
+    margin: 0.75rem auto 0;
+  }
+  .gz__sub {
+    margin: 1.25rem auto 0;
+    max-width: 46ch;
+    font-size: var(--step-1);
+    color: var(--text-mute);
+    line-height: 1.55;
+  }
+
+  .gz__viaggio {
+    margin: 1.25rem auto 0;
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--sesia-deep);
+  }
+  .gz__viaggio[hidden] {
+    display: none;
+  }
+
+  /* --- I prossimi passi --- */
+  .gz__passi {
+    list-style: none;
+    margin: clamp(2.25rem, 6vw, 3.5rem) auto 0;
+    padding: 0;
+    max-width: 34rem;
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+  }
+  .gz__passo {
+    display: flex;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--sesia-bright);
+    border-radius: var(--radius-md);
+    padding: clamp(1.1rem, 3vw, 1.4rem);
+  }
+  .gz__num {
+    flex: 0 0 auto;
+    color: var(--sesia-bright);
+    letter-spacing: 0.12em;
+    padding-top: 0.15rem;
+  }
+  .gz__passo-h {
+    font-size: var(--step-1);
+    line-height: 1.2;
+  }
+  .gz__passo-t {
+    margin-top: 0.45rem;
+    color: var(--text-mute);
+    line-height: 1.6;
+    font-size: var(--step-0);
+  }
+
+  /* --- Contatti diretti --- */
+  .gz__fretta {
+    margin-top: clamp(2.25rem, 6vw, 3.25rem);
+    padding-top: clamp(1.75rem, 4vw, 2.25rem);
+    border-top: 1px solid var(--line);
+  }
+  .gz__fretta-h {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-1);
+  }
+  .gz__ctas {
+    margin-top: 1.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  .gz__back {
+    margin-top: clamp(2rem, 5vw, 2.75rem);
+    font-size: var(--step--1);
+  }
+  .gz__back a {
+    color: var(--text-mute);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .gz__back a:hover {
+    color: var(--sesia-deep);
+  }
+</style>

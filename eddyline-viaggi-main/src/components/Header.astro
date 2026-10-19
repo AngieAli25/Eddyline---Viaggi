@@ -1,0 +1,157 @@
+---
+/**
+ * Header sticky — permanente.
+ * Logo + data del camp + WhatsApp/telefono + CTA. Nessun menu di navigazione
+ * completo: la landing ha un solo obiettivo.
+ */
+import config from '../config';
+import { contacts } from '../data/content';
+import { etichettaPartenze } from '../data/content';
+import type { Viaggio } from '../data/content';
+
+interface Props {
+  /** Il viaggio della pagina corrente: la data nel badge è la sua. */
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const { logoUrl } = config.assets;
+---
+
+<header class="site-header" data-header>
+  <div class="container site-header__inner">
+    <a class="site-header__brand" href="/" aria-label="Eddyline — home">
+      <img src={logoUrl} alt="Eddyline" width="132" height="40" class="site-header__logo" />
+    </a>
+
+    <div class="site-header__actions">
+      <p class="hdr-date tag-mono">{etichettaPartenze(viaggio)}</p>
+
+      <a
+        class="hdr-icon"
+        href={contacts.whatsapp}
+        target="_blank"
+        rel="noopener"
+        aria-label="Scrivici su WhatsApp"
+        data-track="whatsapp_click"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12.04 2c-5.46 0-9.9 4.43-9.9 9.9 0 1.74.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.43 9.9-9.9 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.05 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.06-1.13.08-1.83-.11a16.7 16.7 0 0 1-1.66-.61c-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.2-1.6-1.2-3.04 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.78-.37l.56.01c.18.01.42-.07.66.5.24.59.83 2.04.9 2.19.07.15.12.32.02.51-.1.2-.15.32-.3.49-.14.18-.3.4-.43.53-.14.15-.29.3-.12.6.17.29.74 1.22 1.59 1.98 1.1.98 2.02 1.28 2.31 1.43.29.15.46.12.63-.07.17-.2.73-.85.92-1.14.2-.29.39-.24.66-.15.27.1 1.71.81 2 .96.29.15.49.22.56.34.07.12.07.69-.17 1.36Z"
+          ></path>
+        </svg>
+      </a>
+
+      <a
+        class="hdr-icon hdr-icon--call"
+        href={contacts.phoneHref}
+        aria-label={`Chiama il ${contacts.phoneDisplay}`}
+        data-track="call_click"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1.1l-2.1 2.2Z"
+          ></path>
+        </svg>
+      </a>
+
+      <a class="btn btn-primary hdr-cta" href="#iscrizione">Iscriviti</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-h);
+    background: color-mix(in srgb, var(--foam) 86%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
+  }
+  .site-header[data-scrolled='true'] {
+    border-bottom-color: var(--line);
+    background: color-mix(in srgb, var(--foam) 94%, transparent);
+  }
+  .site-header__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+  }
+  .site-header__logo {
+    height: 34px;
+    width: auto;
+    object-fit: contain;
+  }
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .hdr-date {
+    display: none;
+    margin-right: 0.35rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  @media (min-width: 900px) {
+    .hdr-date {
+      display: block;
+    }
+  }
+
+  .hdr-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-pill);
+    color: var(--sesia-deep);
+    background: var(--sesia-deep-12);
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+  .hdr-icon:hover {
+    background: var(--sesia-deep);
+    color: var(--white);
+    transform: translateY(-2px);
+  }
+  /* Su schermi molto piccoli il telefono basta: WhatsApp resta */
+  .hdr-icon--call {
+    display: none;
+  }
+  @media (min-width: 480px) {
+    .hdr-icon--call {
+      display: inline-flex;
+    }
+  }
+
+  .hdr-cta {
+    padding: 0.7rem 1.15rem;
+    font-size: var(--step--1);
+  }
+  @media (min-width: 480px) {
+    .hdr-cta {
+      padding: 0.75rem 1.35rem;
+      font-size: var(--step-0);
+    }
+  }
+</style>

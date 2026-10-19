@@ -1,0 +1,198 @@
+/* =============================================================
+   Eddyline — Stili globali condivisi
+   Tailwind v4 + token + primitive (bottoni, container, firma corrente).
+   ============================================================= */
+
+@import './tokens.css';
+@import 'tailwindcss';
+
+/* Mappa i token nel theme di Tailwind v4, così le utility (text-sesia-deep,
+   bg-foam, font-display…) restano allineate al design system. */
+@theme {
+  --color-sesia-deep: #0e5a52;
+  --color-sesia-bright: #16b8a0;
+  --color-granite: #1b2426;
+  --color-foam: #f2f6f4;
+  --color-stone-mute: #5e6e6b;
+  --color-rescue: #ff5a3c;
+
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, monospace;
+}
+
+/* =============================================================
+   Layout primitives
+   ============================================================= */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: clamp(1.125rem, 4vw, 2.5rem);
+}
+.container-narrow {
+  max-width: var(--container-narrow);
+}
+
+.section {
+  padding-block: clamp(3rem, 8vw, 6rem);
+}
+
+/* =============================================================
+   Bottoni / CTA (§6.5)
+   Primaria piena --rescue · secondaria outline su --sesia-deep
+   ============================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--step-0);
+  line-height: 1;
+  padding: 0.95rem 1.6rem;
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  text-decoration: none;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Primaria — arancio-soccorso, l'unico colore "energico" diffuso */
+.btn-primary {
+  background-color: var(--rescue);
+  color: var(--white);
+  box-shadow: 0 6px 18px rgba(255, 90, 60, 0.32);
+}
+.btn-primary:hover {
+  background-color: var(--rescue-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(255, 90, 60, 0.38);
+}
+
+/* Secondaria — outline/ghost su sesia-deep */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--sesia-deep);
+  border-color: var(--sesia-deep);
+}
+.btn-secondary:hover {
+  background-color: var(--sesia-deep);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* Varianti su fondo scuro (hero) */
+.btn-ghost-light {
+  background-color: rgba(242, 246, 244, 0.12);
+  color: var(--foam);
+  border-color: rgba(242, 246, 244, 0.4);
+  backdrop-filter: blur(4px);
+}
+.btn-ghost-light:hover {
+  background-color: var(--foam);
+  color: var(--granite);
+  transform: translateY(-2px);
+}
+
+/* =============================================================
+   Elemento firma — "la linea di corrente" (§6.2)
+   Linea fluida, sottile, come una scia. Usata come:
+   separatore, traccia sotto i titoli, accento.
+   Il disegno allo scroll è gestito via .draw-on-scroll + JS.
+   ============================================================= */
+
+/* Separatore di sezione: onda sottile a tutta larghezza */
+.current-line {
+  display: block;
+  width: 100%;
+  height: 44px;
+  color: var(--sesia-bright);
+  overflow: visible;
+}
+.current-line path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Traccia breve sotto i titoli (eyebrow/heading) */
+.current-underline {
+  display: block;
+  width: 88px;
+  height: 12px;
+  color: var(--sesia-bright);
+  margin-top: 0.75rem;
+}
+.current-underline path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+/* Animazione "disegno della linea" allo scroll.
+   La lunghezza viene impostata da JS (getTotalLength). */
+.draw-on-scroll path {
+  stroke-dasharray: var(--len, 1200);
+  stroke-dashoffset: var(--len, 1200);
+  transition: stroke-dashoffset var(--dur-slow) var(--ease-out);
+}
+.draw-on-scroll.is-drawn path {
+  stroke-dashoffset: 0;
+}
+
+/* =============================================================
+   Reveal allo scroll (orchestrazione leggera — §6.6)
+   ============================================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--dur) var(--ease-out),
+    transform var(--dur) var(--ease-out);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger al load dell'hero */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-stagger > * {
+  opacity: 0;
+  animation: hero-rise var(--dur) var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 110ms + 120ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .draw-on-scroll path {
+    stroke-dashoffset: 0;
+  }
+  .hero-stagger > * {
+    opacity: 1;
+    animation: none;
+  }
+}

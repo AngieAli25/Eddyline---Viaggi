@@ -1,0 +1,90 @@
+---
+/**
+ * Trust strip — le 4 ragioni secche subito sotto l'hero.
+ * Icone inline (nessuna dipendenza), niente claim non verificabili.
+ */
+import { trust } from '../data/content';
+
+const paths: Record<string, string> = {
+  shield: 'M12 3l7 3v5.5c0 4.3-2.9 7.9-7 9-4.1-1.1-7-4.7-7-9V6l7-3z',
+  users:
+    'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7.5 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM3 19c0-2.8 2.7-4.5 6-4.5s6 1.7 6 4.5M16 14.6c2.5.3 5 1.8 5 4.4',
+  gear: 'M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19.4 13.5l1.8 1.1-1.7 3-2-.7a7.6 7.6 0 0 1-1.9 1.1l-.3 2.1h-3.4l-.3-2.1a7.6 7.6 0 0 1-1.9-1.1l-2 .7-1.7-3 1.8-1.1a7.7 7.7 0 0 1 0-2.2L2.8 10.5l1.7-3 2 .7a7.6 7.6 0 0 1 1.9-1.1l.3-2.1h3.4l.3 2.1a7.6 7.6 0 0 1 1.9 1.1l2-.7 1.7 3-1.8 1.1a7.7 7.7 0 0 1 0 2.2z',
+  brain:
+    'M9.5 4A3.5 3.5 0 0 0 6 7.5 3 3 0 0 0 4.5 13 3 3 0 0 0 7 17.9V20h5V4.8A2.8 2.8 0 0 0 9.5 4zM14 4.8V20h3v-2.1a3 3 0 0 0 2.5-4.9A3 3 0 0 0 18 7.5 3.5 3.5 0 0 0 14.5 4a2.8 2.8 0 0 0-.5.8z',
+};
+---
+
+<section class="trust" aria-label="Perché questo camp">
+  <div class="container trust__inner">
+    {
+      trust.map((t) => (
+        <div class="trust__item reveal">
+          <span class="trust__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <path
+                d={paths[t.icon]}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <div>
+            <p class="trust__label">{t.label}</p>
+            <p class="trust__detail">{t.detail}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .trust {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .trust__inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1rem, 3vw, 1.75rem);
+    padding-block: clamp(1.5rem, 4vw, 2.25rem);
+  }
+  @media (min-width: 860px) {
+    .trust__inner {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .trust__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .trust__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-pill);
+    background: var(--sesia-bright-15);
+    color: var(--sesia-deep);
+  }
+  .trust__label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-0);
+    line-height: 1.2;
+  }
+  .trust__detail {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--text-mute);
+    margin-top: 0.15rem;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+/**
+ * Composizione completa della pagina di un viaggio.
+ * Usata sia dalla homepage (viaggio in evidenza) sia da /viaggi/[slug]:
+ * un solo posto in cui l'ordine delle sezioni è definito, zero duplicazione.
+ *
+ * Le sezioni con contenuti vuoti si nascondono da sole: un viaggio ancora in
+ * preparazione mostra hero + iscrizione senza buchi editoriali.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from './Header.astro';
+import Hero from './Hero.astro';
+import TrustStrip from './TrustStrip.astro';
+import Esperienza from './Esperienza.astro';
+import Programma from './Programma.astro';
+import Guide from './Guide.astro';
+import Reputazione from './Reputazione.astro';
+import Gallery from './Gallery.astro';
+import Sicurezza from './Sicurezza.astro';
+import Quota from './Quota.astro';
+import Iscrizione from './Iscrizione.astro';
+import Faq from './Faq.astro';
+import AltriViaggi from './AltriViaggi.astro';
+import Footer from './Footer.astro';
+import StickyCta from './StickyCta.astro';
+import CookieBanner from './CookieBanner.astro';
+import type { Viaggio } from '../data/content';
+
+interface Props {
+  viaggio: Viaggio;
+  /** Gli altri viaggi, per la sezione in fondo. */
+  altri: Viaggio[];
+}
+const { viaggio, altri } = Astro.props;
+
+// Ogni sezione appare solo se ha contenuti: così il viaggio placeholder
+// non mostra intestazioni vuote.
+const haEsperienza = viaggio.esperienza.blocchi.length > 0;
+const haProgramma = viaggio.programma.giorni.length > 0;
+const haGallery = viaggio.gallery.length > 0;
+const haQuota = viaggio.incluso.length > 0;
+const haFaq = viaggio.faqs.length > 0;
+const haGuide = viaggio.guideIds.length > 0;
+---
+
+<BaseLayout title={viaggio.meta.title} description={viaggio.meta.description}>
+  <Header slot="header" viaggio={viaggio} />
+  <Footer slot="footer" />
+  <StickyCta slot="sticky" viaggio={viaggio} />
+  <CookieBanner slot="cookie" />
+
+  <Hero viaggio={viaggio} />
+  <TrustStrip />
+
+  {haEsperienza && <Esperienza viaggio={viaggio} />}
+  {haProgramma && <Programma viaggio={viaggio} />}
+  {haGuide && <Guide viaggio={viaggio} />}
+
+  <!-- Credenziali dell'organizzatore, subito dopo le persone -->
+  <Reputazione />
+  {haGallery && <Gallery viaggio={viaggio} />}
+  {haQuota && <Sicurezza />}
+  {haQuota && <Quota viaggio={viaggio} />}
+
+  <Iscrizione viaggio={viaggio} />
+
+  {haFaq && <Faq viaggio={viaggio} />}
+
+  <!-- L'alternativa, per chi non è convinto o non può alle date -->
+  <AltriViaggi viaggi={altri} />
+</BaseLayout>

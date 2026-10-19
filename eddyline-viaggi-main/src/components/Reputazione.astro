@@ -1,0 +1,152 @@
+---
+/**
+ * Fascia reputazione — chi organizza il camp, non cosa dicono del camp.
+ *
+ * Sceglierla al posto di finte testimonianze è deliberato: le recensioni
+ * TripAdvisor di Eddyline riguardano le uscite di mezza giornata in Valsesia,
+ * non un viaggio di sei giorni. Presentarle come feedback del camp sarebbe
+ * fuorviante; il rating come credenziale dell'organizzatore invece risponde
+ * all'obiezione vera — "a chi sto versando la caparra?".
+ */
+import { reputazione } from '../data/content';
+
+const anni = 2026 - reputazione.dal;
+---
+
+<section class="rep" aria-labelledby="rep-title">
+  <div class="container rep__inner">
+    <div class="rep__claim reveal">
+      <h2 class="rep__title" id="rep-title">Chi organizza</h2>
+      <p class="rep__text">{reputazione.claim}</p>
+    </div>
+
+    <div class="rep__badge reveal">
+      <div class="rep__stars" aria-hidden="true">
+        {
+          Array.from({ length: 5 }).map(() => (
+            <svg viewBox="0 0 24 24" width="19" height="19">
+              <path
+                fill="currentColor"
+                d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 17.6l-5.9 3.1 1.2-6.6L2.5 9.5l6.6-.9z"
+              />
+            </svg>
+          ))
+        }
+      </div>
+      <p class="rep__rating">
+        <strong>{reputazione.rating}</strong>
+        <span>su TripAdvisor · {reputazione.count}</span>
+      </p>
+      <p class="rep__rank">{reputazione.rank}</p>
+      <a
+        class="rep__link"
+        href={reputazione.tripadvisorUrl}
+        target="_blank"
+        rel="noopener"
+      >
+        Leggi le recensioni
+      </a>
+      <p class="rep__nota">
+        Valutazioni riferite alle attività Eddyline in Valsesia, dove operiamo da
+        {' '}{anni} anni.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .rep {
+    background: var(--surface);
+    border-block: 1px solid var(--line);
+  }
+  .rep__inner {
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+    padding-block: clamp(2rem, 5vw, 3rem);
+    align-items: center;
+  }
+  @media (min-width: 820px) {
+    .rep__inner {
+      grid-template-columns: 1fr auto;
+      gap: clamp(2rem, 6vw, 4rem);
+    }
+  }
+
+  .rep__title {
+    font-size: var(--step-2);
+  }
+  .rep__text {
+    margin-top: 0.75rem;
+    color: var(--text-mute);
+    line-height: 1.65;
+    max-width: 52ch;
+  }
+
+  .rep__badge {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 3vw, 1.6rem);
+    text-align: center;
+  }
+  @media (min-width: 820px) {
+    .rep__badge {
+      min-width: 17rem;
+    }
+  }
+
+  .rep__stars {
+    display: flex;
+    justify-content: center;
+    gap: 0.15rem;
+    color: var(--sesia-bright);
+  }
+  .rep__rating {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .rep__rating strong {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--step-3);
+    line-height: 1;
+    color: var(--sesia-deep);
+    letter-spacing: -0.02em;
+  }
+  .rep__rating span {
+    font-size: var(--step--1);
+    color: var(--text-mute);
+  }
+  .rep__rank {
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sesia-deep);
+  }
+  .rep__link {
+    display: inline-block;
+    margin-top: 0.85rem;
+    font-weight: 600;
+    font-size: var(--step--1);
+    color: var(--sesia-deep);
+    text-decoration: underline;
+    text-decoration-color: var(--sesia-bright);
+    text-underline-offset: 3px;
+  }
+  .rep__link:hover {
+    color: var(--sesia-bright);
+  }
+  /* Dichiarazione esplicita: le recensioni sono delle attività, non del camp */
+  .rep__nota {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--line);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    color: var(--text-mute);
+  }
+</style>

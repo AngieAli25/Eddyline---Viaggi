@@ -1,0 +1,113 @@
+---
+/**
+ * Sticky CTA mobile — barra fissa in basso, SOLO su mobile.
+ * Nascosta da desktop (≥720px). Rispetta la safe-area iOS.
+ * Si nasconde quando il blocco iscrizione è in viewport, per non coprire il
+ * form mentre lo si compila.
+ */
+import { contacts } from '../data/content';
+import type { Viaggio } from '../data/content';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+---
+
+<div class="sticky-cta" data-sticky-cta aria-label="Azioni rapide">
+  <a class="btn btn-primary sticky-cta__book" href="#iscrizione">
+    {viaggio.prezzo > 0 && <span class="sticky-cta__price">{viaggio.prezzoLabel}</span>}
+    Blocca il posto
+  </a>
+  <a
+    class="sticky-cta__wa"
+    href={contacts.whatsapp}
+    target="_blank"
+    rel="noopener"
+    aria-label="Scrivici su WhatsApp"
+    data-track="whatsapp_click"
+  >
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12.04 2c-5.46 0-9.9 4.43-9.9 9.9 0 1.74.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.43 9.9-9.9 0-2.65-1.03-5.13-2.9-7C17.18 3.03 14.7 2 12.05 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.06-1.13.08-1.83-.11a16.7 16.7 0 0 1-1.66-.61c-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.2-1.6-1.2-3.04 0-1.45.76-2.16 1.03-2.46.27-.3.59-.37.78-.37l.56.01c.18.01.42-.07.66.5.24.59.83 2.04.9 2.19.07.15.12.32.02.51-.1.2-.15.32-.3.49-.14.18-.3.4-.43.53-.14.15-.29.3-.12.6.17.29.74 1.22 1.59 1.98 1.1.98 2.02 1.28 2.31 1.43.29.15.46.12.63-.07.17-.2.73-.85.92-1.14.2-.29.39-.24.66-.15.27.1 1.71.81 2 .96.29.15.49.22.56.34.07.12.07.69-.17 1.36Z"
+      ></path>
+    </svg>
+  </a>
+</div>
+
+<script>
+  /**
+   * Nasconde la barra quando #iscrizione è visibile (non coprire il form).
+   */
+  (function () {
+    const bar = document.querySelector<HTMLElement>('[data-sticky-cta]');
+    const target = document.getElementById('iscrizione');
+    if (!bar || !target || !('IntersectionObserver' in window)) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          bar.setAttribute('data-hidden', e.isIntersecting ? 'true' : 'false');
+        });
+      },
+      { threshold: 0.08 }
+    );
+    io.observe(target);
+  })();
+</script>
+
+<style>
+  .sticky-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.6rem 0.9rem calc(0.6rem + env(safe-area-inset-bottom, 0));
+    background: color-mix(in srgb, var(--foam) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 24px rgba(27, 36, 38, 0.12);
+    transform: translateY(0);
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .sticky-cta[data-hidden='true'] {
+    transform: translateY(110%);
+  }
+  @media (min-width: 720px) {
+    .sticky-cta {
+      display: none;
+    }
+  }
+
+  .sticky-cta__book {
+    flex: 1 1 auto;
+    gap: 0.5rem;
+  }
+  .sticky-cta__price {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    padding-right: 0.5rem;
+    margin-right: 0.1rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .sticky-cta__wa {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.1rem;
+    border-radius: var(--radius-pill);
+    background: var(--sesia-deep);
+    color: var(--foam);
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .sticky-cta__wa:hover {
+    background: var(--sesia-bright);
+    color: var(--granite);
+  }
+</style>

@@ -1,0 +1,29 @@
+---
+/**
+ * Homepage — VETRINA minima: hero di brand + le due card, e nulla più.
+ * Non racconta nessun viaggio e non ha form: l'unica azione possibile è
+ * aprire una delle due schede. La scelta è di fatto obbligata senza essere
+ * bloccante (nessun modal): la pagina semplicemente non offre altro.
+ *
+ * Il dettaglio di ogni viaggio vive su /viaggi/[slug].
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeaderVetrina from '../components/HeaderVetrina.astro';
+import HeroVetrina from '../components/HeroVetrina.astro';
+import SceltaViaggi from '../components/SceltaViaggi.astro';
+import Footer from '../components/Footer.astro';
+import CookieBanner from '../components/CookieBanner.astro';
+
+const title = 'Eddyline Viaggi — Camp di avventura e mental coaching';
+const description =
+  'Due camp di avventura Eddyline: canyoning, trekking e lavoro mentale in gruppi ristretti con guide certificate. Scegli il viaggio e scopri programma, quota e disponibilità.';
+---
+
+<BaseLayout title={title} description={description}>
+  <HeaderVetrina slot="header" />
+  <Footer slot="footer" />
+  <CookieBanner slot="cookie" />
+
+  <HeroVetrina />
+  <SceltaViaggi />
+</BaseLayout>

@@ -1,0 +1,98 @@
+---
+/**
+ * Sicurezza — il protocollo di ogni uscita.
+ * Risponde all'obiezione più forte ("è pericoloso?") con fatti, non rassicurazioni.
+ */
+import { sicurezza } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+---
+
+<section class="sic section" id="sicurezza" aria-labelledby="sic-title">
+  <div class="container">
+    <div class="sic__layout">
+      <div class="sic__head reveal">
+        <p class="eyebrow">{sicurezza.eyebrow}</p>
+        <h2 class="sic__title" id="sic-title">{sicurezza.title}</h2>
+        <CurrentLine variant="underline" animate={true} class="sic__underline" />
+        <p class="sic__intro">{sicurezza.intro}</p>
+      </div>
+
+      <ul class="sic__grid">
+        {
+          sicurezza.punti.map((p, i) => (
+            <li class="sic__card reveal">
+              <span class="sic__num tag-mono" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 class="sic__h3">{p.titolo}</h3>
+              <p class="sic__text">{p.testo}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sic {
+    background: var(--surface);
+  }
+  .sic__layout {
+    display: grid;
+    gap: clamp(1.75rem, 5vw, 3rem);
+  }
+  @media (min-width: 900px) {
+    .sic__layout {
+      grid-template-columns: 1fr 1.15fr;
+      align-items: start;
+    }
+  }
+
+  .sic__title {
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+    max-width: 20ch;
+  }
+  .sic__intro {
+    margin-top: 1.25rem;
+    color: var(--text-mute);
+    line-height: 1.65;
+    max-width: 44ch;
+  }
+
+  .sic__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+  @media (min-width: 620px) {
+    .sic__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .sic__card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--sesia-bright);
+    border-radius: var(--radius-md);
+    padding: clamp(1.1rem, 2.5vw, 1.4rem);
+  }
+  .sic__num {
+    color: var(--sesia-bright);
+    letter-spacing: 0.14em;
+  }
+  .sic__h3 {
+    font-size: var(--step-1);
+    margin-top: 0.35rem;
+  }
+  .sic__text {
+    margin-top: 0.55rem;
+    color: var(--text-mute);
+    line-height: 1.6;
+    font-size: var(--step-0);
+  }
+</style>

@@ -1,0 +1,327 @@
+---
+/**
+ * La scelta: le due card della homepage, a pari livello.
+ * È l'unica azione della pagina — nessun form, nessun contenuto oltre.
+ * Card interamente cliccabile (link che copre la superficie), con dentro solo
+ * le informazioni utili a decidere: dove, quando, quanto dura, quanto costa.
+ *
+ * Un viaggio non ancora aperto (`pubblicato: false`) non è cliccabile: mostra
+ * "in preparazione" e rimanda ai contatti.
+ */
+import {
+  viaggi,
+  vetrina,
+  contacts,
+  etichettaPartenze,
+  etichettaDurata,
+  partenzeCompatte,
+} from '../data/content';
+---
+
+<section class="scelta section" id="scegli" aria-labelledby="scelta-title">
+  <div class="container">
+    <p class="scelta__invito reveal" id="scelta-title">{vetrina.invito}</p>
+
+    <ul class="scelta__grid">
+      {
+        viaggi.map((v) => (
+          <li class="scelta__item">
+            <article
+              class="vcard reveal"
+              data-pubblicato={String(v.pubblicato)}
+              aria-labelledby={`vc-${v.slug}`}
+            >
+              <div class="vcard__media">
+                <picture>
+                  <source type="image/webp" srcset={`/images/${v.cover}-960.webp`} />
+                  <img
+                    src={`/images/${v.cover}-960.jpg`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="960"
+                    height="720"
+                  />
+                </picture>
+                <span class="vcard__badge tag-mono">{etichettaPartenze(v)}</span>
+              </div>
+
+              <div class="vcard__body">
+                <h2 class="vcard__nome" id={`vc-${v.slug}`}>
+                  {v.pubblicato ? (
+                    /* Il link copre tutta la card: l'intera superficie è cliccabile */
+                    <a class="vcard__link" href={`/viaggi/${v.slug}`}>
+                      {v.nome}
+                    </a>
+                  ) : (
+                    v.nome
+                  )}
+                </h2>
+                <p class="vcard__claim">{v.claim}</p>
+
+                <dl class="vcard__facts">
+                  <div>
+                    <dt>Dove</dt>
+                    <dd>{v.destinazione}</dd>
+                  </div>
+                  <div>
+                    <dt>Quando</dt>
+                    <dd>{partenzeCompatte(v)}</dd>
+                  </div>
+                  <div>
+                    <dt>Durata</dt>
+                    <dd>{etichettaDurata(v)}</dd>
+                  </div>
+                  <div>
+                    <dt>Quota</dt>
+                    <dd>{v.prezzoLabel}</dd>
+                  </div>
+                </dl>
+
+                {v.pubblicato ? (
+                  <p class="vcard__cta" aria-hidden="true">
+                    <span>Scopri il viaggio</span>
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                      <path
+                        d="M5 12h13M13 6l6 6-6 6"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </p>
+                ) : (
+                  <p class="vcard__soon">
+                    <span class="vcard__soon-tag">In preparazione</span>
+                    <a
+                      class="vcard__soon-link"
+                      href={contacts.whatsapp}
+                      target="_blank"
+                      rel="noopener"
+                      data-track="whatsapp_click"
+                    >
+                      Avvisami all’apertura
+                    </a>
+                  </p>
+                )}
+              </div>
+            </article>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .scelta {
+    background: var(--bg);
+    padding-block: clamp(2rem, 5vw, 3rem);
+  }
+  .scelta__invito {
+    text-align: center;
+    max-width: 44ch;
+    margin: 0 auto clamp(1.25rem, 3vw, 1.75rem);
+    font-family: var(--font-mono);
+    font-size: var(--step-0);
+    color: var(--text-mute);
+  }
+
+  .scelta__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+  }
+  @media (min-width: 800px) {
+    .scelta__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .scelta__item {
+    display: flex;
+  }
+
+  /* --- Card --- */
+  .vcard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+  .vcard[data-pubblicato='true']:hover {
+    border-color: var(--sesia-bright);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
+  /* Focus visibile sulla card quando il link interno prende il fuoco */
+  .vcard:focus-within {
+    outline: 3px solid var(--sesia-bright);
+    outline-offset: 3px;
+  }
+
+  .vcard__media {
+    position: relative;
+    overflow: hidden;
+  }
+  .vcard__media img {
+    width: 100%;
+    /* Panoramica: la card resta bassa e le due entrano nel primo schermo */
+    aspect-ratio: 16 / 9;
+    height: auto;
+    object-fit: cover;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .vcard[data-pubblicato='true']:hover .vcard__media img {
+    transform: scale(1.04);
+  }
+  .vcard[data-pubblicato='false'] .vcard__media img {
+    filter: saturate(0.4) brightness(0.78);
+  }
+
+  .vcard__badge {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--granite) 88%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--sesia-bright);
+    letter-spacing: 0.1em;
+  }
+
+  .vcard__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: clamp(1.25rem, 2.5vw, 1.6rem);
+  }
+
+  .vcard__nome {
+    font-size: var(--step-2);
+    line-height: 1.1;
+  }
+  /* Il link copre tutta la card: click ovunque, un solo target per gli AT */
+  .vcard__link {
+    text-decoration: none;
+    color: inherit;
+  }
+  .vcard__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .vcard__link:focus-visible {
+    outline: none;
+  }
+
+  .vcard__claim {
+    margin-top: 0.5rem;
+    color: var(--text-mute);
+    line-height: 1.55;
+  }
+
+  .vcard__facts {
+    margin: 1.1rem 0 0;
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 0.55rem;
+  }
+  /* Card larga: i 4 dati su due colonne, così non allungano la scheda */
+  @media (min-width: 520px) {
+    .vcard__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem 1.5rem;
+    }
+  }
+  .vcard__facts > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .vcard__facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .vcard__facts dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .vcard__cta {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    color: var(--rescue);
+    transition: gap var(--dur-fast) var(--ease-out);
+  }
+  .vcard[data-pubblicato='true']:hover .vcard__cta {
+    gap: 0.85rem;
+  }
+
+  .vcard__soon {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .vcard__soon-tag {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--radius-pill);
+    background: var(--foam-soft);
+    color: var(--stone-mute);
+  }
+  .vcard__soon-link {
+    position: relative;
+    z-index: 2;
+    font-weight: 600;
+    color: var(--sesia-deep);
+    text-decoration: underline;
+    text-decoration-color: var(--sesia-bright);
+    text-underline-offset: 3px;
+  }
+  .vcard__soon-link:hover {
+    color: var(--sesia-bright);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vcard[data-pubblicato='true']:hover {
+      transform: none;
+    }
+    .vcard[data-pubblicato='true']:hover .vcard__media img {
+      transform: none;
+    }
+  }
+</style>

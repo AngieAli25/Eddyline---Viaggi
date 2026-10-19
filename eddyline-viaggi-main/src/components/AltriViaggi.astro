@@ -1,0 +1,248 @@
+---
+/**
+ * Altri viaggi — card del catalogo.
+ * Compare in fondo alla pagina di un viaggio, per mostrare l'alternativa
+ * a chi non è convinto da quello che sta guardando (o non può alle date).
+ *
+ * Un viaggio con `pubblicato: false` mostra la card ma senza link: serve a
+ * raccogliere interesse in anticipo, non a mandare su una pagina vuota.
+ */
+import { etichettaPartenze, etichettaDurata, partenzeCompatte } from '../data/content';
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggi: Viaggio[];
+  /** Titolo della sezione (cambia tra homepage e pagina dettaglio). */
+  titolo?: string;
+}
+const { viaggi, titolo = 'Anche questo, se le date non tornano' } = Astro.props;
+---
+
+{
+  viaggi.length > 0 && (
+    <section class="altri section" id="altri-viaggi" aria-labelledby="altri-title">
+      <div class="container">
+        <div class="altri__head reveal">
+          <p class="eyebrow">ALTRI VIAGGI</p>
+          <h2 class="altri__title" id="altri-title">{titolo}</h2>
+          <CurrentLine variant="underline" animate={true} class="altri__underline" />
+        </div>
+
+        <div class="altri__grid" data-count={viaggi.length}>
+          {viaggi.map((v) => (
+            <article class="altri__card reveal" data-pubblicato={String(v.pubblicato)}>
+              <div class="altri__media">
+                <picture>
+                  <source type="image/webp" srcset={`/images/${v.cover}-960.webp`} />
+                  <img
+                    src={`/images/${v.cover}-960.jpg`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="960"
+                    height="720"
+                  />
+                </picture>
+                <span class="altri__badge tag-mono">{etichettaPartenze(v)}</span>
+              </div>
+
+              <div class="altri__body">
+                <h3 class="altri__nome">{v.nome}</h3>
+                <p class="altri__claim">{v.claim}</p>
+
+                <dl class="altri__facts">
+                  <div>
+                    <dt>Dove</dt>
+                    <dd>{v.destinazione}</dd>
+                  </div>
+                  <div>
+                    <dt>Quando</dt>
+                    <dd>{partenzeCompatte(v)}</dd>
+                  </div>
+                  <div>
+                    <dt>Durata</dt>
+                    <dd>{etichettaDurata(v)}</dd>
+                  </div>
+                  <div>
+                    <dt>Quota</dt>
+                    <dd>{v.prezzoLabel}</dd>
+                  </div>
+                </dl>
+
+                {v.pubblicato ? (
+                  <a class="btn btn-secondary altri__cta" href={`/viaggi/${v.slug}`}>
+                    Scopri il viaggio
+                  </a>
+                ) : (
+                  <div class="altri__soon">
+                    <p class="altri__soon-label">In preparazione</p>
+                    <a class="btn btn-secondary altri__cta" href="#iscrizione">
+                      Avvisami all’apertura
+                    </a>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .altri {
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+  }
+  .altri__head {
+    text-align: center;
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+  .altri__title {
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+  }
+  .altri__underline {
+    margin-inline: auto;
+  }
+
+  .altri__grid {
+    margin-top: clamp(2rem, 5vw, 3rem);
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2rem);
+  }
+  /* Con un solo viaggio la card non deve occupare tutta la larghezza */
+  .altri__grid[data-count='1'] {
+    max-width: 34rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 760px) {
+    .altri__grid[data-count='2'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .altri__card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+  .altri__card:hover {
+    border-color: var(--sesia-bright);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+  }
+
+  .altri__media {
+    position: relative;
+    overflow: hidden;
+  }
+  .altri__media img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    height: auto;
+    object-fit: cover;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .altri__card:hover .altri__media img {
+    transform: scale(1.04);
+  }
+  /* Un viaggio non ancora aperto: foto smorzata, non è il protagonista */
+  .altri__card[data-pubblicato='false'] .altri__media img {
+    filter: saturate(0.45) brightness(0.8);
+  }
+
+  .altri__badge {
+    position: absolute;
+    left: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--granite) 88%, transparent);
+    backdrop-filter: blur(6px);
+    color: var(--sesia-bright);
+    letter-spacing: 0.1em;
+  }
+
+  .altri__body {
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .altri__nome {
+    font-size: var(--step-2);
+  }
+  .altri__claim {
+    margin-top: 0.5rem;
+    color: var(--text-mute);
+    line-height: 1.55;
+  }
+
+  .altri__facts {
+    margin: 1.1rem 0 0;
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 0.5rem;
+  }
+  .altri__facts > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .altri__facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+  }
+  .altri__facts dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .altri__cta {
+    margin-top: auto;
+    width: 100%;
+  }
+  .altri__facts + .altri__cta {
+    margin-top: 1.25rem;
+  }
+
+  .altri__soon {
+    margin-top: 1.25rem;
+  }
+  .altri__soon-label {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--sesia-deep);
+    margin-bottom: 0.6rem;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .altri__card:hover {
+      transform: none;
+    }
+    .altri__card:hover .altri__media img {
+      transform: none;
+    }
+  }
+</style>

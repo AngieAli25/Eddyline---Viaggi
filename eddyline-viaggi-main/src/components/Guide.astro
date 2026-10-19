@@ -1,0 +1,181 @@
+---
+/**
+ * Le due guide — ritratto + qualifiche + bio.
+ * Le qualifiche sono l'elemento di prova più forte della pagina: in evidenza.
+ */
+import { getGuide } from '../data/content';
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const guide = getGuide(viaggio.guideIds);
+---
+
+<section class="guide section" id="guide" aria-labelledby="guide-title">
+  <div class="container">
+    <div class="guide__head reveal">
+      <p class="eyebrow">CHI TI ACCOMPAGNA</p>
+      <h2 class="guide__title" id="guide-title">Due guide, due competenze</h2>
+      <CurrentLine variant="underline" animate={true} class="guide__underline" />
+      <p class="guide__intro">
+        Uno conosce l’acqua e la roccia da trent’anni. L’altro lavora su ciò che accade
+        nella testa quando la fatica arriva. Insieme sono il motivo per cui questo camp
+        funziona.
+      </p>
+    </div>
+
+    <div class="guide__grid">
+      {
+        guide.map((g) => (
+          <article class="guide__card reveal">
+            <div class="guide__media">
+              <picture>
+                <source type="image/webp" srcset={`/images/${g.img}.webp`} />
+                <img
+                  src={`/images/${g.img}.jpg`}
+                  alt={`${g.nome}, ${g.ruolo}`}
+                  loading="lazy"
+                  decoding="async"
+                  width="800"
+                  height="622"
+                />
+              </picture>
+            </div>
+
+            <div class="guide__body">
+              <h3 class="guide__nome">{g.nome}</h3>
+              <p class="guide__ruolo tag-mono">{g.ruolo}</p>
+
+              <ul class="guide__quals">
+                {g.qualifiche.map((q) => (
+                  <li>
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                      <path
+                        d="M5 12.5l4.5 4.5L19 7.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    <span>{q}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p class="guide__bio">{g.bio}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .guide {
+    background: var(--surface);
+  }
+  .guide__head {
+    max-width: 44rem;
+  }
+  .guide__title {
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+  }
+  .guide__intro {
+    margin-top: 1.25rem;
+    font-size: var(--step-1);
+    color: var(--text-mute);
+    line-height: 1.55;
+    max-width: 52ch;
+  }
+
+  .guide__grid {
+    margin-top: clamp(2.25rem, 6vw, 3.5rem);
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+  }
+  @media (min-width: 820px) {
+    .guide__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .guide__card {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+  }
+  .guide__card:hover {
+    border-color: var(--sesia-bright);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+  }
+
+  .guide__media img {
+    width: 100%;
+    height: clamp(14rem, 32vw, 19rem);
+    object-fit: cover;
+    object-position: center 28%;
+  }
+
+  .guide__body {
+    padding: clamp(1.25rem, 3vw, 1.85rem);
+  }
+  .guide__nome {
+    font-size: var(--step-2);
+  }
+  .guide__ruolo {
+    margin-top: 0.3rem;
+    color: var(--sesia-deep);
+  }
+
+  .guide__quals {
+    margin: 1.1rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .guide__quals li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    font-size: var(--step--1);
+    font-weight: 500;
+    line-height: 1.45;
+  }
+  .guide__quals svg {
+    flex: 0 0 auto;
+    margin-top: 0.15rem;
+    color: var(--sesia-bright);
+  }
+
+  .guide__bio {
+    margin-top: 1.1rem;
+    color: var(--text-mute);
+    line-height: 1.65;
+    font-size: var(--step-0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guide__card:hover {
+      transform: none;
+    }
+  }
+</style>

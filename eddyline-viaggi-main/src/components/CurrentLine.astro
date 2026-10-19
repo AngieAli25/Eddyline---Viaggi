@@ -1,0 +1,38 @@
+---
+/**
+ * Elemento firma "la linea di corrente" (§6.2).
+ * Linea fluida e sottile, riutilizzata come separatore tra sezioni,
+ * traccia sotto i titoli, accento. Animabile allo scroll (draw-on-scroll).
+ *
+ * variant:
+ *  - "separator" → onda a tutta larghezza tra sezioni
+ *  - "underline" → traccia breve sotto un titolo/eyebrow
+ */
+interface Props {
+  variant?: 'separator' | 'underline';
+  /** Attiva il disegno della linea allo scroll. */
+  animate?: boolean;
+  class?: string;
+}
+
+const { variant = 'separator', animate = false, class: className = '' } = Astro.props;
+
+// Path morbidi, costruiti a mano per evocare la scia di corrente.
+const separatorPath =
+  'M0,22 C140,2 260,42 400,22 C540,2 660,42 800,22 C940,2 1060,42 1200,22';
+const underlinePath = 'M2,9 C22,2 40,16 60,9 C72,5 80,7 86,4';
+
+const isSep = variant === 'separator';
+const baseClass = isSep ? 'current-line' : 'current-underline';
+const drawClass = animate ? ' draw-on-scroll' : '';
+---
+
+<svg
+  class={`${baseClass}${drawClass} ${className}`.trim()}
+  viewBox={isSep ? '0 0 1200 44' : '0 0 88 12'}
+  preserveAspectRatio={isSep ? 'none' : 'xMidYMid meet'}
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={isSep ? separatorPath : underlinePath} />
+</svg>

@@ -1,0 +1,75 @@
+---
+/**
+ * Meta Pixel — caricato SOLO dopo il consenso marketing.
+ *
+ * Il pixel di Meta non conosce il Consent Mode di Google: mentre GTM riceve
+ * `gtag('consent', …)` e si regola da sé, `fbevents.js` parte e traccia appena
+ * viene incluso. Su una landing a pagamento in Europa non è accettabile, così
+ * qui lo script NON viene incluso finché la persona non accetta la categoria
+ * marketing del banner.
+ *
+ * Il consenso arriva da due parti:
+ *  - all'avvio, da `localStorage('eddyline_consent')` se la scelta è già stata
+ *    fatta in una visita precedente;
+ *  - durante la navigazione, da `window.eddylineMarketingConsent(bool)`, che
+ *    CookieBanner chiama a ogni aggiornamento.
+ *
+ * Manca di proposito il `<noscript><img>` dello snippet originale: quello
+ * traccia senza JavaScript e quindi senza poter rispettare il consenso.
+ *
+ * Eventi: PageView al caricamento, poi `Lead` e `Contact` spinti dai punti che
+ * già emettono gli eventi nel dataLayer (Iscrizione e i link di contatto).
+ */
+import { config } from '../config';
+
+const pixelId = config.integrations.metaPixelId;
+---
+
+{
+  pixelId && (
+    <script is:inline define:vars={{ pixelId }}>
+      (function () {
+        var caricato = false;
+
+        function carica() {
+          if (caricato || !pixelId) return;
+          caricato = true;
+
+          /* Snippet ufficiale Meta, con l'init spostato dopo: qui arriviamo
+             solo a consenso dato. */
+          !(function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+            n = f.fbq = function () {
+              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+            if (!f._fbq) f._fbq = n;
+            n.push = n;
+            n.loaded = !0;
+            n.version = '2.0';
+            n.queue = [];
+            t = b.createElement(e);
+            t.async = !0;
+            t.src = v;
+            s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s);
+          })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+          window.fbq('init', pixelId);
+          window.fbq('track', 'PageView');
+        }
+
+        /* Chiamata da CookieBanner a ogni scelta. Revocare il consenso non
+           "scarica" il pixel — impossibile una volta incluso — ma impedisce
+           che parta nelle pagine successive. */
+        window.eddylineMarketingConsent = function (ok) {
+          if (ok) carica();
+        };
+
+        try {
+          var c = JSON.parse(localStorage.getItem('eddyline_consent') || 'null');
+          if (c && c.marketing === true) carica();
+        } catch (e) {}
+      })();
+    </script>
+  )
+}

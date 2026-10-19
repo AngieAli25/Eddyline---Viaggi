@@ -1,0 +1,201 @@
+---
+/**
+ * Programma giorno-per-giorno — timeline su fondo scuro.
+ * NOTA: i contenuti sono una BOZZA dedotta dalle attività incluse
+ * (vedi [3] in src/data/content.ts). Da confermare prima del go-live.
+ */
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const { programma } = viaggio;
+---
+
+<section class="prog section" id="programma" aria-labelledby="prog-title">
+  <div class="container">
+    <div class="prog__head reveal">
+      <p class="eyebrow prog__eyebrow">{programma.eyebrow}</p>
+      <h2 class="prog__title" id="prog-title">{programma.title}</h2>
+      <CurrentLine variant="underline" animate={true} class="prog__underline" />
+    </div>
+
+    <ol class="prog__list">
+      {
+        programma.giorni.map((g) => (
+          <li class="prog__item reveal">
+            <div class="prog__marker" aria-hidden="true"></div>
+            <div class="prog__card">
+              <div class="prog__meta">
+                <span class="prog__giorno tag-mono">{g.giorno}</span>
+                <span class="prog__data">{g.data}</span>
+              </div>
+              <h3 class="prog__h3">{g.titolo}</h3>
+              <ul class="prog__voci">
+                {g.voci.map((v) => (
+                  <li>{v}</li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    {programma.nota && <p class="prog__nota reveal">{programma.nota}</p>}
+  </div>
+</section>
+
+<style>
+  .prog {
+    background: var(--granite);
+    color: var(--text-on-dark);
+  }
+  .prog__head {
+    text-align: center;
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+  .prog__eyebrow {
+    color: var(--sesia-bright);
+  }
+  .prog__title {
+    color: var(--foam);
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+  }
+  .prog__underline {
+    margin-inline: auto;
+    color: var(--sesia-bright);
+  }
+
+  .prog__list {
+    list-style: none;
+    margin: clamp(2.5rem, 6vw, 4rem) auto 0;
+    padding: 0;
+    max-width: 46rem;
+    position: relative;
+  }
+  /* Filo verticale della timeline */
+  .prog__list::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0.75rem;
+    bottom: 0.75rem;
+    width: 2px;
+    background: linear-gradient(
+      180deg,
+      var(--sesia-bright) 0%,
+      rgba(22, 184, 160, 0.25) 100%
+    );
+  }
+  @media (min-width: 640px) {
+    .prog__list::before {
+      left: 0.6875rem;
+    }
+  }
+
+  .prog__item {
+    position: relative;
+    padding-left: 2.25rem;
+  }
+  .prog__item + .prog__item {
+    margin-top: 1rem;
+  }
+  @media (min-width: 640px) {
+    .prog__item {
+      padding-left: 2.75rem;
+    }
+  }
+
+  .prog__marker {
+    position: absolute;
+    left: 0;
+    top: 1.4rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: var(--radius-pill);
+    background: var(--granite);
+    border: 2.5px solid var(--sesia-bright);
+  }
+  @media (min-width: 640px) {
+    .prog__marker {
+      left: 0.1875rem;
+    }
+  }
+
+  .prog__card {
+    background: rgba(242, 246, 244, 0.05);
+    border: 1px solid rgba(242, 246, 244, 0.12);
+    border-radius: var(--radius-md);
+    padding: clamp(1.1rem, 3vw, 1.6rem);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .prog__card:hover {
+    border-color: rgba(22, 184, 160, 0.5);
+  }
+
+  .prog__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+  }
+  .prog__giorno {
+    color: var(--sesia-bright);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .prog__data {
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 60%, transparent);
+  }
+
+  .prog__h3 {
+    color: var(--foam);
+    font-size: var(--step-1);
+    margin-top: 0.4rem;
+  }
+
+  .prog__voci {
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+  }
+  .prog__voci li {
+    position: relative;
+    padding-left: 1.15rem;
+    color: color-mix(in srgb, var(--foam) 82%, transparent);
+    line-height: 1.55;
+    font-size: var(--step-0);
+  }
+  .prog__voci li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--radius-pill);
+    background: var(--sesia-bright);
+  }
+
+  .prog__nota {
+    margin: clamp(1.75rem, 4vw, 2.5rem) auto 0;
+    max-width: 46rem;
+    font-size: var(--step--1);
+    font-style: italic;
+    color: color-mix(in srgb, var(--foam) 58%, transparent);
+    padding-left: 2.25rem;
+  }
+  @media (min-width: 640px) {
+    .prog__nota {
+      padding-left: 2.75rem;
+    }
+  }
+</style>

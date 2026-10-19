@@ -1,0 +1,274 @@
+---
+/**
+ * La quota — incluso / non incluso + riepilogo pagamento.
+ * Trasparenza totale sul prezzo: è la sezione che elimina l'ultima obiezione.
+ */
+import { notaEsclusioni, etichettaDurata } from '../data/content';
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const { incluso, nonIncluso, notaAssicurazione } = viaggio;
+---
+
+<section class="quota section" id="quota" aria-labelledby="quota-title">
+  <div class="container">
+    <div class="quota__head reveal">
+      <p class="eyebrow">LA QUOTA</p>
+      <h2 class="quota__title" id="quota-title">Cosa comprende, senza sorprese</h2>
+      <CurrentLine variant="underline" animate={true} class="quota__underline" />
+    </div>
+
+    <div class="quota__grid">
+      <!-- Card prezzo -->
+      <aside class="quota__price reveal" aria-label="Quota di partecipazione">
+        <p class="quota__price-label tag-mono">QUOTA DI PARTECIPAZIONE</p>
+        <p class="quota__price-value">{viaggio.prezzoLabel}</p>
+        <p class="quota__price-note">a persona · {etichettaDurata(viaggio)}</p>
+
+        <dl class="quota__pay">
+          <div>
+            <dt>Caparra</dt>
+            <dd>{viaggio.caparraLabel}</dd>
+          </div>
+          <div>
+            <dt>Saldo</dt>
+            <dd>{viaggio.saldoLabel}</dd>
+          </div>
+        </dl>
+
+        <p class="quota__pay-note">
+          Pagamento tramite {viaggio.pagamento}. La caparra blocca il posto, il saldo si versa
+          prima della partenza. È possibile pagare in più soluzioni.
+        </p>
+
+        <a class="btn btn-primary quota__cta" href="#iscrizione">Blocca il tuo posto</a>
+        <p class="quota__limit">Posti limitati — il camp è a numero chiuso.</p>
+      </aside>
+
+      <!-- Liste incluso / non incluso -->
+      <div class="quota__lists">
+        <div class="quota__list reveal">
+          <h3 class="quota__list-h">
+            <span class="quota__badge quota__badge--in" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15">
+                <path
+                  d="M5 12.5l4.5 4.5L19 7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            È incluso
+          </h3>
+          <ul class="quota__items quota__items--in">
+            {incluso.map((i) => <li>{i}</li>)}
+          </ul>
+        </div>
+
+        {nonIncluso.length > 0 && (
+        <div class="quota__list reveal">
+          <h3 class="quota__list-h">
+            <span class="quota__badge quota__badge--out" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="15" height="15">
+                <path
+                  d="M7 7l10 10M17 7L7 17"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"></path>
+              </svg>
+            </span>
+            Non è incluso
+          </h3>
+          <ul class="quota__items quota__items--out">
+            {nonIncluso.map((i) => <li>{i}</li>)}
+          </ul>
+          {notaAssicurazione && <p class="quota__hint">{notaAssicurazione}</p>}
+          <p class="quota__hint quota__hint--muted">{notaEsclusioni}</p>
+        </div>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .quota__head {
+    max-width: 44rem;
+  }
+  .quota__title {
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+  }
+
+  .quota__grid {
+    margin-top: clamp(2rem, 5vw, 3rem);
+    display: grid;
+    gap: clamp(1.5rem, 4vw, 2.5rem);
+    align-items: start;
+  }
+  @media (min-width: 920px) {
+    .quota__grid {
+      grid-template-columns: 22rem 1fr;
+    }
+  }
+
+  /* --- Card prezzo (sticky da desktop) --- */
+  .quota__price {
+    background: var(--granite);
+    color: var(--text-on-dark);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    box-shadow: var(--shadow-lg);
+  }
+  @media (min-width: 920px) {
+    .quota__price {
+      position: sticky;
+      top: calc(var(--header-h) + 1.5rem);
+    }
+  }
+  .quota__price-label {
+    color: var(--sesia-bright);
+    letter-spacing: 0.16em;
+  }
+  .quota__price-value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--step-4);
+    line-height: 1;
+    color: var(--foam);
+    margin-top: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+  .quota__price-note {
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 62%, transparent);
+    margin-top: 0.4rem;
+  }
+
+  .quota__pay {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 1.35rem 0 0;
+    padding-top: 1.35rem;
+    border-top: 1px solid rgba(242, 246, 244, 0.18);
+  }
+  .quota__pay dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--foam) 60%, transparent);
+  }
+  .quota__pay dd {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-1);
+    color: var(--foam);
+  }
+
+  .quota__pay-note {
+    margin-top: 1rem;
+    font-size: var(--step--1);
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--foam) 72%, transparent);
+  }
+
+  .quota__cta {
+    width: 100%;
+    margin-top: 1.35rem;
+  }
+  .quota__limit {
+    margin-top: 0.75rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--sesia-bright);
+  }
+
+  /* --- Liste --- */
+  .quota__lists {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 1.75rem);
+  }
+  .quota__list {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.25rem, 3vw, 1.85rem);
+  }
+  .quota__list-h {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: var(--step-1);
+  }
+  .quota__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+  }
+  .quota__badge--in {
+    background: var(--sesia-bright-15);
+    color: var(--sesia-deep);
+  }
+  .quota__badge--out {
+    background: var(--rescue-12);
+    color: var(--rescue-dark);
+  }
+
+  .quota__items {
+    margin: 1.1rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .quota__items li {
+    position: relative;
+    padding-left: 1.35rem;
+    line-height: 1.55;
+  }
+  .quota__items li::before {
+    content: '';
+    position: absolute;
+    left: 0.1rem;
+    top: 0.6em;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: var(--radius-pill);
+  }
+  .quota__items--in li::before {
+    background: var(--sesia-bright);
+  }
+  .quota__items--out li::before {
+    background: var(--stone-mute);
+  }
+  .quota__items--out li {
+    color: var(--text-mute);
+  }
+
+  .quota__hint {
+    margin-top: 0.9rem;
+    font-size: var(--step--1);
+    color: var(--sesia-deep);
+    font-weight: 500;
+  }
+  .quota__hint--muted {
+    color: var(--text-mute);
+    font-weight: 400;
+    font-style: italic;
+  }
+</style>

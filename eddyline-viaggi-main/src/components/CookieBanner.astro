@@ -1,0 +1,357 @@
+---
+/**
+ * Cookie banner — Consent Mode v2 (§9.4). Obbligatorio UE/Italia.
+ * I default 'denied' sono già impostati nel BaseLayout PRIMA di GTM.
+ * Questo banner permette ad utente di aggiornare il consenso:
+ *  - Accetta tutto / Rifiuta tutto / Preferenze (granulare)
+ *  - gtag('consent','update', …) per analytics_storage, ad_storage,
+ *    ad_user_data, ad_personalization
+ *  - scelta persistita in localStorage: il banner non riappare.
+ * Accessibile (role=dialog, focus iniziale), reduced-motion ok.
+ */
+import { contacts } from '../data/content';
+---
+
+<div
+  class="cc"
+  data-cookie-banner
+  role="dialog"
+  aria-modal="false"
+  aria-labelledby="cc-title"
+  aria-describedby="cc-desc"
+  hidden
+>
+  <div class="cc__panel">
+    <!-- Vista principale -->
+    <div class="cc__main" data-cc-view="main">
+      <div class="cc__text">
+        <h2 class="cc__title" id="cc-title">Rispettiamo la tua privacy</h2>
+        <p class="cc__desc" id="cc-desc">
+          Usiamo cookie tecnici e, con il tuo consenso, cookie di analisi e
+          marketing per misurare le campagne e migliorare l’esperienza. Puoi
+          accettare, rifiutare o scegliere.
+          <a href={contacts.privacyUrl} target="_blank" rel="noopener">Privacy &amp; Cookie</a>.
+        </p>
+      </div>
+      <div class="cc__actions">
+        <button type="button" class="cc__link" data-cc="prefs">Preferenze</button>
+        <button type="button" class="cc__link" data-cc="reject">Rifiuta</button>
+        <button type="button" class="btn btn-primary cc__btn cc__btn--accept" data-cc="accept">
+          Accetta e continua
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista preferenze (granulare) -->
+    <div class="cc__prefs" data-cc-view="prefs" hidden>
+      <h2 class="cc__title">Preferenze cookie</h2>
+      <ul class="cc__list">
+        <li class="cc__row">
+          <div>
+            <span class="cc__row-title">Tecnici (sempre attivi)</span>
+            <span class="cc__row-desc">Necessari al funzionamento del sito.</span>
+          </div>
+          <span class="cc__always">Sempre</span>
+        </li>
+        <li class="cc__row">
+          <label class="cc__row-label">
+            <div>
+              <span class="cc__row-title">Analisi</span>
+              <span class="cc__row-desc">Statistiche d’uso anonime (GA4).</span>
+            </div>
+            <input type="checkbox" data-cc-cat="analytics" />
+          </label>
+        </li>
+        <li class="cc__row">
+          <label class="cc__row-label">
+            <div>
+              <span class="cc__row-title">Marketing</span>
+              <span class="cc__row-desc">Misurazione e personalizzazione degli annunci.</span>
+            </div>
+            <input type="checkbox" data-cc-cat="marketing" />
+          </label>
+        </li>
+      </ul>
+      <div class="cc__actions">
+        <button type="button" class="btn btn-secondary cc__btn" data-cc="reject">Rifiuta tutto</button>
+        <button type="button" class="btn btn-primary cc__btn" data-cc="save">Salva preferenze</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cc {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    padding: clamp(0.75rem, 3vw, 1.25rem);
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .cc[hidden] {
+    display: none;
+  }
+  .cc__panel {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 56rem;
+    background: var(--granite);
+    color: var(--foam);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: clamp(1.25rem, 4vw, 1.75rem);
+    animation: cc-in var(--dur) var(--ease-out);
+    /* lascia spazio alla sticky CTA mobile */
+    margin-bottom: env(safe-area-inset-bottom, 0);
+  }
+  @keyframes cc-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .cc__title {
+    font-size: var(--step-1);
+    color: var(--foam);
+  }
+  .cc__desc {
+    margin-top: 0.5rem;
+    color: color-mix(in srgb, var(--foam) 80%, transparent);
+    font-size: var(--step--1);
+    line-height: 1.55;
+  }
+  .cc__desc a {
+    color: var(--sesia-bright);
+    text-decoration: underline;
+  }
+
+  .cc__actions {
+    margin-top: 1.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1.1rem;
+  }
+  .cc__btn {
+    padding-block: 0.7rem;
+    font-size: 0.95rem;
+  }
+  /* Accetta: bottone prominente, il punto focale (più accettazioni). */
+  .cc__btn--accept {
+    flex: 1 1 auto;
+    min-width: 12rem;
+    order: 3; /* sempre a destra/ultimo = posizione d'azione naturale */
+    font-size: 1rem;
+    padding-block: 0.85rem;
+  }
+  /* Preferenze e Rifiuta: link discreti, presenti ma non competono con Accetta
+     (restano pienamente accessibili e conformi). */
+  .cc__link {
+    background: none;
+    border: 0;
+    padding: 0.3rem 0.2rem;
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 72%, transparent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .cc__link:hover {
+    color: var(--foam);
+  }
+  /* le ghost su fondo scuro: rendiamole leggibili (usate nel pannello preferenze) */
+  .cc .btn-secondary {
+    color: var(--foam);
+    border-color: rgba(242, 246, 244, 0.4);
+  }
+  .cc .btn-secondary:hover {
+    background: var(--foam);
+    color: var(--granite);
+  }
+
+  .cc__list {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .cc__row {
+    background: rgba(242, 246, 244, 0.06);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+  }
+  .cc__row-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+  }
+  .cc__row-title {
+    display: block;
+    font-weight: 600;
+  }
+  .cc__row-desc {
+    display: block;
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--foam) 70%, transparent);
+  }
+  .cc__row-label input {
+    width: 1.2rem;
+    height: 1.2rem;
+    accent-color: var(--sesia-bright);
+    flex: 0 0 auto;
+  }
+  .cc__always {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sesia-bright);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .cc__row:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  @media (min-width: 680px) {
+    .cc__main {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .cc__main .cc__actions {
+      margin-top: 0;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
+    }
+    .cc__btn {
+      flex: 0 0 auto;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cc__panel {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * Cookie banner — logica Consent Mode v2 (§9.4).
+   * Persistenza in localStorage('eddyline_consent'). Aggiorna il consenso via
+   * gtag('consent','update', …). Mappa categorie → segnali Google:
+   *  - analytics → analytics_storage
+   *  - marketing → ad_storage, ad_user_data, ad_personalization
+   */
+  (function () {
+    const KEY = 'eddyline_consent';
+    const banner = document.querySelector<HTMLElement>('[data-cookie-banner]');
+    if (!banner) return;
+
+    function applyConsent(analytics: boolean, marketing: boolean) {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      // gtag deve pushare l'oggetto `arguments` reale (Consent Mode lo richiede),
+      // quindi usiamo una function classica, non arrow.
+      const g =
+        (window as any).gtag ||
+        function () {
+          (window as any).dataLayer.push(arguments);
+        };
+      g('consent', 'update', {
+        analytics_storage: analytics ? 'granted' : 'denied',
+        ad_storage: marketing ? 'granted' : 'denied',
+        ad_user_data: marketing ? 'granted' : 'denied',
+        ad_personalization: marketing ? 'granted' : 'denied',
+      });
+      (window as any).dataLayer.push({
+        event: 'consent_update',
+        consent_analytics: analytics,
+        consent_marketing: marketing,
+      });
+
+      /* Meta Pixel: non legge il Consent Mode di Google, va avvisato a parte.
+         Si carica alla prima accettazione del marketing; se il consenso viene
+         negato non parte affatto. */
+      (window as any).eddylineMarketingConsent?.(marketing);
+    }
+
+    function save(analytics: boolean, marketing: boolean) {
+      try {
+        localStorage.setItem(
+          KEY,
+          JSON.stringify({ analytics, marketing, t: 'set' })
+        );
+      } catch (e) {}
+      applyConsent(analytics, marketing);
+      hide();
+    }
+
+    function show() {
+      banner!.hidden = false;
+      banner!.querySelector<HTMLElement>('[data-cc="accept"]')?.focus();
+    }
+    function hide() {
+      banner!.hidden = true;
+    }
+
+    function setView(view: 'main' | 'prefs') {
+      banner!.querySelectorAll<HTMLElement>('[data-cc-view]').forEach((v) => {
+        v.hidden = v.dataset.ccView !== view;
+      });
+    }
+
+    // Il RIPRISTINO del consenso da scelta precedente avviene inline nel
+    // BaseLayout (prima di GTM), non qui: uno script di modulo girerebbe troppo
+    // tardi e GA4 partirebbe in denied. Qui mostriamo il banner solo se non
+    // esiste ancora una scelta salvata.
+    let stored: { analytics?: boolean; marketing?: boolean } | null = null;
+    try {
+      stored = JSON.parse(localStorage.getItem(KEY) || 'null');
+    } catch (e) {}
+
+    if (!stored || typeof stored.analytics !== 'boolean') {
+      show();
+    }
+
+    // --- Bottoni ---
+    banner.querySelectorAll<HTMLElement>('[data-cc]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.cc;
+        if (action === 'accept') save(true, true);
+        else if (action === 'reject') save(false, false);
+        else if (action === 'prefs') setView('prefs');
+        else if (action === 'save') {
+          const analytics =
+            banner.querySelector<HTMLInputElement>('[data-cc-cat="analytics"]')?.checked ?? false;
+          const marketing =
+            banner.querySelector<HTMLInputElement>('[data-cc-cat="marketing"]')?.checked ?? false;
+          save(analytics, marketing);
+        }
+      });
+    });
+
+    // Espone una funzione per riaprire il banner (utile dal footer in futuro)
+    (window as any).eddylineOpenConsent = () => {
+      setView('main');
+      show();
+    };
+  })();
+</script>

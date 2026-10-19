@@ -1,0 +1,216 @@
+---
+/**
+ * Hero — foto verticale della calata + velo brand + linea di corrente.
+ * Sequenza orchestrata leggera al load (.hero-stagger), reduced-motion ok.
+ */
+import { etichettaDurata } from '../data/content';
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const { hero } = viaggio;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero__bg" aria-hidden="true">
+    <picture>
+      <source
+        type="image/webp"
+        media="(max-width: 720px)"
+        srcset={`/images/${viaggio.cover}-960.webp`}
+      />
+      <source type="image/webp" srcset={`/images/${viaggio.cover}.webp`} />
+      <source media="(max-width: 720px)" srcset={`/images/${viaggio.cover}-960.jpg`} />
+      <img
+        src={`/images/${viaggio.cover}.jpg`}
+        alt=""
+        class="hero__img"
+        fetchpriority="high"
+        decoding="async"
+        width="1600"
+        height="1067"
+      />
+    </picture>
+    <div class="hero__veil"></div>
+    <svg class="hero__current" viewBox="0 0 600 200" aria-hidden="true" preserveAspectRatio="none">
+      <path
+        d="M-20,150 C120,60 260,180 400,90 C500,30 560,70 620,40"
+        fill="none"
+        stroke="var(--sesia-bright)"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        opacity="0.55"></path>
+    </svg>
+  </div>
+
+  <div class="container hero__inner hero-stagger">
+    <p class="eyebrow hero__eyebrow" style="--i:0">{hero.eyebrow}</p>
+
+    <h1 class="hero__title" id="hero-title" style="--i:1">{hero.h1}</h1>
+
+    <div style="--i:2">
+      <CurrentLine variant="underline" class="hero__underline" />
+    </div>
+
+    <p class="hero__sub" style="--i:3">{hero.sub}</p>
+
+    <p class="tag-mono hero__tag" style="--i:4">{hero.tagMono}</p>
+
+    <div class="hero__ctas" style="--i:5">
+      <a class="btn btn-primary" href="#iscrizione">Richiedi informazioni</a>
+      {
+        viaggio.programma.giorni.length > 0 && (
+          <a class="btn btn-ghost-light" href="#programma">
+            Guarda il programma
+          </a>
+        )
+      }
+    </div>
+
+    <dl class="hero__facts" style="--i:6">
+      <div class="hero__fact">
+        <dt>Durata</dt>
+        <dd>{etichettaDurata(viaggio)}</dd>
+      </div>
+      <div class="hero__fact">
+        <dt>Dove</dt>
+        <dd>{viaggio.destinazione}</dd>
+      </div>
+      <div class="hero__fact">
+        <dt>Quota</dt>
+        <dd>{viaggio.prezzoLabel}</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: clamp(36rem, 88vh, 50rem);
+    display: flex;
+    align-items: flex-end;
+    padding-block: clamp(2.5rem, 8vh, 5rem);
+    overflow: hidden;
+    background: var(--granite);
+    color: var(--text-on-dark);
+  }
+
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+  }
+  .hero__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(27, 36, 38, 0.5) 0%,
+        rgba(27, 36, 38, 0.42) 38%,
+        rgba(27, 36, 38, 0.96) 100%
+      ),
+      radial-gradient(120% 80% at 80% 0%, rgba(14, 90, 82, 0.5) 0%, transparent 60%),
+      color-mix(in srgb, var(--granite) 22%, transparent);
+  }
+  @media (min-width: 720px) {
+    .hero__veil {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(27, 36, 38, 0.8) 0%,
+          rgba(27, 36, 38, 0.52) 44%,
+          rgba(27, 36, 38, 0.2) 100%
+        ),
+        linear-gradient(180deg, rgba(27, 36, 38, 0.2) 0%, rgba(27, 36, 38, 0.72) 100%),
+        radial-gradient(120% 80% at 85% 0%, rgba(14, 90, 82, 0.4) 0%, transparent 55%);
+    }
+  }
+  .hero__current {
+    position: absolute;
+    top: 8%;
+    right: -4%;
+    width: min(60%, 28rem);
+    height: auto;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 48rem;
+  }
+  .hero__eyebrow {
+    color: var(--sesia-bright);
+  }
+  .hero__title {
+    color: var(--foam);
+    font-size: var(--step-5);
+    max-width: 20ch;
+    margin-top: 0.6rem;
+  }
+  .hero__underline {
+    color: var(--sesia-bright);
+  }
+  .hero__sub {
+    margin-top: 1.25rem;
+    max-width: 50ch;
+    font-size: var(--step-1);
+    color: color-mix(in srgb, var(--foam) 90%, transparent);
+    line-height: 1.5;
+  }
+  .hero__tag {
+    margin-top: 1.1rem;
+    color: var(--sesia-bright);
+    font-size: var(--step-0);
+    letter-spacing: 0.02em;
+  }
+  .hero__ctas {
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Fatti chiave: durata / dove / quota */
+  .hero__facts {
+    margin: 2.25rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 clamp(1.5rem, 5vw, 3rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(242, 246, 244, 0.18);
+  }
+  .hero__fact dt {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--foam) 62%, transparent);
+  }
+  .hero__fact dd {
+    margin: 0.25rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-1);
+    color: var(--foam);
+  }
+
+  @media (min-width: 720px) {
+    .hero {
+      align-items: center;
+    }
+  }
+</style>

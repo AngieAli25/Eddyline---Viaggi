@@ -1,0 +1,129 @@
+---
+/**
+ * L'esperienza — 4 blocchi alternati foto/testo.
+ * Racconta cosa è davvero il camp prima di chiedere qualsiasi cosa.
+ */
+import type { Viaggio } from '../data/content';
+import CurrentLine from './CurrentLine.astro';
+
+interface Props {
+  viaggio: Viaggio;
+}
+const { viaggio } = Astro.props;
+const { esperienza } = viaggio;
+---
+
+<section class="esp section" id="esperienza" aria-labelledby="esp-title">
+  <div class="container">
+    <div class="esp__head reveal">
+      <p class="eyebrow">{esperienza.eyebrow}</p>
+      <h2 class="esp__title" id="esp-title">{esperienza.title}</h2>
+      <CurrentLine variant="underline" animate={true} class="esp__underline" />
+      <p class="esp__intro">{esperienza.intro}</p>
+    </div>
+
+    <div class="esp__list">
+      {
+        esperienza.blocchi.map((b, i) => (
+          <article class="esp__row reveal" data-flip={i % 2 === 1 ? 'true' : 'false'}>
+            <div class="esp__media">
+              <picture>
+                <source type="image/webp" srcset={`/images/${b.img}-960.webp`} />
+                <img
+                  src={`/images/${b.img}-960.jpg`}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width="960"
+                  height="640"
+                />
+              </picture>
+            </div>
+            <div class="esp__body">
+              <p class="esp__num tag-mono">{String(i + 1).padStart(2, '0')}</p>
+              <h3 class="esp__h3">{b.titolo}</h3>
+              <p class="esp__text">{b.testo}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .esp__head {
+    max-width: 44rem;
+  }
+  .esp__title {
+    font-size: var(--step-3);
+    margin-top: 0.5rem;
+    max-width: 24ch;
+  }
+  .esp__intro {
+    margin-top: 1.25rem;
+    font-size: var(--step-1);
+    color: var(--text-mute);
+    line-height: 1.55;
+    max-width: 54ch;
+  }
+
+  .esp__list {
+    margin-top: clamp(2.5rem, 7vw, 4.5rem);
+    display: grid;
+    gap: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .esp__row {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    align-items: center;
+  }
+  @media (min-width: 820px) {
+    .esp__row {
+      grid-template-columns: 1.1fr 1fr;
+    }
+    /* Righe dispari: media a destra */
+    .esp__row[data-flip='true'] .esp__media {
+      order: 2;
+    }
+  }
+
+  .esp__media {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    background: var(--foam-soft);
+  }
+  .esp__media img {
+    width: 100%;
+    height: clamp(15rem, 38vw, 24rem);
+    object-fit: cover;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .esp__row:hover .esp__media img {
+    transform: scale(1.03);
+  }
+
+  .esp__num {
+    color: var(--sesia-bright);
+    letter-spacing: 0.14em;
+  }
+  .esp__h3 {
+    font-size: var(--step-2);
+    margin-top: 0.4rem;
+    max-width: 22ch;
+  }
+  .esp__text {
+    margin-top: 0.85rem;
+    color: var(--text-mute);
+    line-height: 1.65;
+    max-width: 46ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .esp__row:hover .esp__media img {
+      transform: none;
+    }
+  }
+</style>

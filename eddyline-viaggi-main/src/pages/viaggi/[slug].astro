@@ -1,0 +1,23 @@
+---
+/**
+ * Scheda completa di un viaggio: /viaggi/<slug>.
+ * Ogni viaggio pubblicato ha la sua pagina — nessuno vive sulla homepage,
+ * che è solo una vetrina di scelta.
+ */
+import type { GetStaticPaths } from 'astro';
+import PaginaViaggio from '../../components/PaginaViaggio.astro';
+import { viaggi, altriRispettoA } from '../../data/content';
+
+export const getStaticPaths = (() => {
+  return viaggi
+    .filter((v) => v.pubblicato)
+    .map((v) => ({
+      params: { slug: v.slug },
+      props: { viaggio: v, altri: altriRispettoA(v.slug) },
+    }));
+}) satisfies GetStaticPaths;
+
+const { viaggio, altri } = Astro.props;
+---
+
+<PaginaViaggio viaggio={viaggio} altri={altri} />
